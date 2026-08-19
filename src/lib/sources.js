@@ -6,4 +6,11 @@ export const SOURCES = {
     url: "https://jobs.lever.co/Onehouse",
     company: "Onehouse",
   },
+  "sourcegraph-greenhouse-custom": {
+    label: "Sourcegraph (custom Scraper Studio scraper)",
+    kind: "custom",
+    collectorId: "c_mt0i5k70qvn77jqk4",
+    url: "https://job-boards.greenhouse.io/sourcegraph91",
+    company: "Sourcegraph",
+  },
 };

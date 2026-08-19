@@ -8,9 +8,9 @@ function normalizeEmploymentType(raw) {
   return "unspecified";
 }
 
-// A raw record from the Onehouse Lever collector looks like:
-// { job_title, location, employment_type, application_link, product_page_url }
-export function normalizeLeverJob(raw, { company, source }) {
+// Shared shape across our collectors (Lever and Greenhouse both normalize to this):
+// { job_title, location, employment_type?, application_link, product_page_url }
+export function normalizeJobPosting(raw, { company, source }) {
   const title = (raw.job_title || "").trim();
   const location = (raw.location || "").trim();
   const employmentType = normalizeEmploymentType(raw.employment_type);
@@ -44,4 +44,12 @@ export function normalizeLeverJob(raw, { company, source }) {
 // True if a collector output entry is a failed-crawl marker rather than a job.
 export function isCrawlError(entry) {
   return Boolean(entry && entry.error);
+}
+
+// Greenhouse (and some other ATSs) mix generic CTA links into the listing
+// that look like job cards but aren't — filter those out before normalizing.
+const NON_JOB_TITLE_PATTERN = /talent community|future (job )?opportunities/i;
+
+export function isRealJobPosting(raw) {
+  return Boolean(raw?.job_title) && !NON_JOB_TITLE_PATTERN.test(raw.job_title);
 }

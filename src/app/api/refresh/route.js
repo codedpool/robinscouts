@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { runCollector } from "@/lib/scraper";
-import { normalizeLeverJob, isCrawlError } from "@/lib/normalize";
+import { normalizeJobPosting, isCrawlError, isRealJobPosting } from "@/lib/normalize";
 import { SOURCES } from "@/lib/sources";
 
 export async function POST() {
@@ -11,7 +11,7 @@ export async function POST() {
     try {
       const raw = await runCollector(config.collectorId, config.url);
       const errors = raw.filter(isCrawlError);
-      const validEntries = raw.filter((e) => !isCrawlError(e) && e.job_title);
+      const validEntries = raw.filter((e) => !isCrawlError(e) && isRealJobPosting(e));
 
       if (validEntries.length === 0) {
         // Source unhealthy: this run returned 0 usable jobs. Leave existing
@@ -34,7 +34,7 @@ export async function POST() {
 
       let savedCount = 0;
       for (const entry of validEntries) {
-        const normalized = normalizeLeverJob(entry, {
+        const normalized = normalizeJobPosting(entry, {
           company: config.company,
           source: sourceKey,
         });
