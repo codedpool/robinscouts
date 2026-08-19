@@ -2,28 +2,171 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>RobinTest Careers</title>
+<style>
+  :root {
+    --ink: #16181d;
+    --ink-soft: #5b6270;
+    --paper: #fbfaf8;
+    --card: #ffffff;
+    --line: #e7e4de;
+    --accent: #d4572a;
+    --accent-soft: #fdece3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 5rem;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
+  }
+
+  .intro {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    max-width: 46ch;
+    margin: 0 0 3rem;
+  }
+
+  .job-listing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .job {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.25rem 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .job:hover {
+    border-color: #d8d3ca;
+    transform: translateY(-1px);
+  }
+
+  .job-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 0.3rem;
+    letter-spacing: -0.01em;
+  }
+
+  .job-location {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .job-location::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .job-apply {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 0.55rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--accent);
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .job-apply:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  footer {
+    margin-top: 3rem;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+  }
+
+  footer a { color: inherit; }
+</style>
 </head>
 <body>
-  <h1>Careers at RobinTest</h1>
-  <p>A static page controlled by the RobinScouts project, used to demonstrate a genuine (not staged) Scraper Studio self-heal against a real structural change.</p>
+  <div class="wrap">
+    <span class="eyebrow">RobinScouts test fixture</span>
+    <h1>Careers at RobinTest</h1>
+    <p class="intro">A small static page we fully control, used to demonstrate a genuine — not staged — Bright Data Scraper Studio self-heal against a real structural change.</p>
 
-  <div class="job-listing">
-    <div class="job">
-      <h2 class="job-title">Backend Engineer</h2>
-      <span class="job-location">Remote</span>
-      <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
+    <div class="job-listing">
+      <div class="job">
+        <div>
+          <h2 class="job-title">Backend Engineer</h2>
+          <span class="job-location">Remote</span>
+        </div>
+        <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
+      </div>
+      <div class="job">
+        <div>
+          <h2 class="job-title">Frontend Engineer</h2>
+          <span class="job-location">San Francisco, CA</span>
+        </div>
+        <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
+      </div>
+      <div class="job">
+        <div>
+          <h2 class="job-title">Product Designer</h2>
+          <span class="job-location">New York, NY</span>
+        </div>
+        <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
+      </div>
     </div>
-    <div class="job">
-      <h2 class="job-title">Frontend Engineer</h2>
-      <span class="job-location">San Francisco, CA</span>
-      <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
-    </div>
-    <div class="job">
-      <h2 class="job-title">Product Designer</h2>
-      <span class="job-location">New York, NY</span>
-      <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
-    </div>
+
+    <footer>
+      Part of <a href="https://github.com/codedpool/robinscouts">RobinScouts</a> — built for Into the Scrape-Verse (WeMakeDevs × Bright Data).
+    </footer>
   </div>
 </body>
 </html>
