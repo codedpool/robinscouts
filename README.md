@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# RobinScouts
 
-## Getting Started
+A hiring-change intelligence feed. RobinScouts watches public job sources and
+tells you what's new or changed since you last checked — not just "here are
+some jobs." Built for the **Into the Scrape-Verse** hackathon (WeMakeDevs ×
+Bright Data).
 
-First, run the development server:
+This is a work in progress and will keep evolving as the hackathon
+progresses. This README covers what's built so far.
+
+## What's built so far
+
+- A custom **Bright Data Scraper Studio** scraper for [Onehouse's careers
+  page](https://jobs.lever.co/Onehouse) (a Lever-hosted job board, not
+  covered by Bright Data's pre-built library).
+- A Next.js app that runs that scraper on demand, normalizes the results
+  into a common job schema, and stores them in SQLite.
+- A feed page showing the live, real jobs pulled from that scraper.
+- Source health tracking: if a scrape run comes back with 0 valid jobs, the
+  feed shows a visible "source unhealthy" warning instead of silently going
+  empty, and keeps showing the last known-good data.
+
+Not built yet: a second (library) source, deduplication, change detection
+(new/updated/possibly-closed), and rule-based match scoring. These are next.
+
+## Tech stack
+
+- **Next.js** (App Router, JavaScript) — single codebase for UI + API routes,
+  no separate backend service.
+- **SQLite via Prisma** for storage.
+- **Bright Data CLI** (`bdata`), invoked via Node's `child_process`, to run
+  the Scraper Studio collector.
+- **Tailwind** for styling.
+
+## How the custom Scraper Studio scraper is used
+
+The collector (`c_msz1d5ly1aja1gxcbg`) targets `https://jobs.lever.co/Onehouse`,
+Onehouse's public careers listing page. Its parser reads every job card on
+that page (title, location, employment type/commitment, and the application
+link) and returns them as a list. It also has a fallback branch that can
+parse a single Lever job *detail* page if given one instead of a listing
+page.
+
+The app calls it with:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bdata scraper run c_msz1d5ly1aja1gxcbg https://jobs.lever.co/Onehouse --json
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+via `src/lib/scraper.js`, and normalizes each returned record into the
+shared job schema in `src/lib/normalize.js` before saving it.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Requires Node.js and the [Bright Data CLI](https://github.com/brightdata/cli)
+(`npm i -g @brightdata/cli`, then `bdata login`) authenticated with access to
+the collector above.
 
-## Learn More
+```bash
+git clone https://github.com/codedpool/robinscouts.git
+cd robinscouts
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# create .env with:
+# DATABASE_URL="file:./dev.db"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+npx prisma migrate dev
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000), then click "Check for
+new jobs" to run the scraper and populate the feed.
 
-## Deploy on Vercel
+## Example structured output
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Coming soon, once the normalized schema settles further.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Demo video
+
+Coming soon, once more of the product is built.
+
+## AI-assistant disclosure
+
+This project was built with the help of [Claude
+Code](https://claude.com/claude-code). All code and architectural decisions
+were reviewed and are understood by the author.

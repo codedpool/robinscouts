@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Job {
+  id               String   @id @default(uuid())
+  company          String
+  title            String
+  titleNormalized  String
+  location         String // JSON-stringified array, e.g. ["Remote","India"]
+  employmentType   String // internship | entry-level | full-time | unspecified
+  experience       String   @default("unspecified")
+  skills           String   @default("[]") // JSON-stringified array
+  salary           String?
+  description      String   @default("")
+  sourceUrl        String
+  applicationUrl   String   @unique
+  source           String // e.g. "onehouse-lever-custom"
+  firstSeenAt      DateTime @default(now())
+  lastSeenAt       DateTime @updatedAt
+  contentHash      String
+  status           String   @default("active") // active | possibly_closed | source_unhealthy
+  duplicateOfId    String?
+  rawJson          String // raw scraper output for this record, for debugging
+
+  @@index([source])
+  @@index([status])
+}
+
+model SourceStatus {
+  source        String    @id // matches Job.source
+  label         String
+  status        String    @default("healthy") // healthy | unhealthy
+  lastCheckedAt DateTime  @updatedAt
+  lastSuccessAt DateTime?
+  lastError     String?
+  jobCount      Int       @default(0)
+}
