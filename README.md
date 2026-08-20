@@ -36,9 +36,12 @@ progresses. This README covers what's built so far.
 - Per-company hiring-activity summaries ("Onehouse posted 9 roles this
   week, 7 match your profile"), based on our own `firstSeenAt` tracking
   rather than a fabricated real posting date.
+- Self-service company tracking: any visitor can paste their own Bright
+  Data API key and a career page URL to build and run a **new** custom
+  Scraper Studio collector live, scoped to their own browser session — see
+  below for how it works and its honest limitations.
 
-Not built yet: the on-camera self-heal recording and the example
-structured output file — these are next.
+Not built yet: the on-camera self-heal recording — next.
 
 ## Tech stack
 
@@ -88,6 +91,33 @@ manual step. We also keep a
 Pages) specifically so this can be demonstrated against a real structural
 change we make ourselves, not a simulated one — since the real target
 sites won't conveniently redesign themselves on demand.
+
+## Self-service "add a company" (bring your own key)
+
+Beyond the two built-in sources, any visitor can track a new company
+themselves: paste a Bright Data API key and a career page URL, and the app
+builds a real custom Scraper Studio collector live — with step-by-step
+progress ("Reading the page…", "Writing the scraper…", "Testing it against
+the real page…") — then runs it immediately and folds the results into the
+same dedup/change-detection/matching pipeline as Onehouse and Sourcegraph.
+
+**How the key is handled:** it's used with `bdata`'s `-k` flag, which
+overrides authentication for that single CLI call only — verified
+empirically (a bogus key fails with a clean 401, it never silently falls
+back to this server's own logged-in session). The key is never written to
+our database or logs; the browser keeps it in `sessionStorage` only
+(cleared when the tab closes) and resends it on later requests for that
+visitor's own sources. Each visitor's added companies are scoped to an
+anonymous session cookie, so nobody sees anyone else's.
+
+**Honest limitation:** AI-generated scraping for an arbitrary site is
+inherently less predictable than the two collectors above, which were
+hand-verified. Live testing surfaced two real failure modes — a
+generation prompt that produced the wrong data shape (fixed by
+simplifying it) and, separately, a genuine backend-side timeout on Bright
+Data's own AI generation pipeline for one run. Both are visible to the
+user as a clear error rather than a silent failure, but we're not
+claiming this works for every site on the first try.
 
 ## How deduplication, change detection, and matching work
 
@@ -151,12 +181,34 @@ npx prisma migrate dev
 npm run dev
 ```
 
+`npm install` regenerates the Prisma client automatically via a
+`postinstall` script — if you ever see a `Can't resolve
+"@/generated/prisma"` build error after pulling schema changes, just run
+`npx prisma generate` directly.
+
 Open [http://localhost:3000](http://localhost:3000), then click "Check for
 new jobs" to run the scraper and populate the feed.
 
 ## Example structured output
 
-Coming soon, once the normalized schema settles further.
+[`example-output.json`](example-output.json) — two real records pulled
+directly from the running app's database, one per built-in source, shown
+exactly as they're stored (after JSON-decoding the array-typed fields).
+Trimmed to the interesting fields:
+
+```json
+{
+  "company": "Onehouse",
+  "title": "Backend Engineer- Kubernetes Infrastructure (India)",
+  "location": ["Bangalore"],
+  "employmentType": "full-time",
+  "skills": ["kubernetes"],
+  "applicationUrl": "https://jobs.lever.co/Onehouse/02defd5a-e1d8-46b4-8e3b-7bac65b0f59a",
+  "source": "onehouse-lever-custom",
+  "lastRunChangeType": "unchanged",
+  "status": "active"
+}
+```
 
 ## Demo video
 

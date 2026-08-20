@@ -20,9 +20,10 @@ phase until the previous one is demo-able end to end.
 - [x] **Phase 3** — Stage 3: change detection — done 2026-08-20
 - [x] **Phase 4** — Stage 4: rule-based matching — done 2026-08-20
 - [x] **Phase 5** — Stage 5: company hiring-activity summaries (optional, cut first) — done 2026-08-20
+- [x] **Phase 5.5** — UI redesign + self-service "add a company" (BYOK) — done 2026-08-20, not an original stage, see below
 - [ ] **Phase 6** — Final: demo video + full README + submission — not started
 
-Last updated: 2026-08-20 (Phases 2–4 completed this session).
+Last updated: 2026-08-20 (Phases 2–4 completed earlier in the day; Phase 5.5 added that evening).
 
 ---
 
@@ -103,7 +104,7 @@ From the official rules — do not violate.
 - [x] Main coding started after the hackathon began (Aug 17). — all build work done 2026-08-19.
 - [x] Public repo — https://github.com/codedpool/robinscouts
 - [x] README present, with Scraper Studio explanation and AI-assistant disclosure — basic version done, will evolve.
-- [ ] Example structured output committed to the repo — **deliberately deferred**, not forgotten.
+- [x] Example structured output committed to the repo — `example-output.json`, two real records pulled straight from the running app's database.
 - [ ] Demo video — **deliberately deferred**, comes once more of the product is built.
 - [x] README's plain-language explanations of dedup / change-detection / matching rules.
 
@@ -319,6 +320,35 @@ weights. **Met.**
 
 ---
 
+## Phase 5.5 — UI redesign + self-service "add a company" (BYOK)
+
+Not one of the original stages — added 2026-08-20 evening after two rounds
+of UI feedback and a strategic pivot toward making Bright Data's live
+scraper-generation a user-facing feature instead of a backend detail.
+
+- [x] Full redesign: warm light theme built around the mascot logo's
+  navy/orange/gold palette, dense single-panel job list instead of a
+  stacked card grid. See `git log` for the two redesign commits.
+- [x] Self-service "add a company": a visitor pastes their own Bright Data
+  API key + a career page URL, watches a real custom collector get built
+  live (step-by-step progress), and it joins their session's feed under
+  the same dedup/change-detection/matching pipeline as the two built-in
+  sources. Session-scoped via `src/proxy.js` (Next 16's renamed
+  `middleware.js`); the key is never persisted server-side.
+- [x] Verified end-to-end against a real target with a real key — full
+  pipeline confirmed working: session cookie, live progress polling,
+  collector creation, first scrape, DB writes, key redaction on every
+  error path.
+- **Honest, undismissed limitation:** AI-generated scraping for an
+  arbitrary user-supplied site is less reliable than the two hand-tuned
+  static collectors. Live testing hit both a schema-generation mismatch
+  (fixed by simplifying the prompt) and a genuine backend-side generation
+  timeout (not fixable from our side — Bright Data's own AI-Flow stage
+  stalled). **Rehearse against the specific site you plan to demo before
+  recording it live** — don't assume any arbitrary URL will work first try.
+
+---
+
 ## Phase 6 — Final: demo, README, submission
 
 ### Day-5 checkpoint (hard rule)
@@ -326,17 +356,21 @@ weights. **Met.**
 - [ ] By end of day 5, stop building new product features entirely. At minimum have: working custom source + visible break/heal/recover loop, real combined feed, second source integrated (if stable), dedup (if second source is in), basic change detection, a stable rehearsed demo dataset (don't rely on live sites cooperating during recording).
 - [ ] From day 5 onward, only: fix demo-breaking bugs, tidy UI just enough for clarity, write the README, record and edit the demo video, test the repo from a clean clone, fill out the submission form.
 
-### Demo script (~4–5 min video, one continuous story — not disconnected feature demos)
+### Demo script (~5–6 min video, one continuous story — not disconnected feature demos)
+
+Revised 2026-08-20 evening to fold in the BYOK feature — it's now arguably
+the headline beat, not an afterthought, so it gets its own step rather than
+being tacked on at the end.
 
 - [ ] 1. Enter preferences: entry-level backend roles, India or remote, Python/FastAPI.
-- [ ] 2. Show the unified feed — one card from the custom source, one from the library source, clearly labeled.
-- [ ] 3. Point out a duplicate collapsed into one card ("Found on 2 sources").
+- [ ] 2. Show the unified feed — one card from Onehouse (Lever), one from Sourcegraph (Greenhouse), clearly labeled, match % + "Shown because" reasons visible.
+- [ ] 3. Point out a duplicate collapsed into one card ("Found on N sources") **if one genuinely exists in the demo dataset at record time** — don't fabricate one. If not, skip this beat rather than fake it; the rule is still explained in the README.
 - [ ] 4. Show one **new** job and one **updated** job (with the specific field that changed).
-- [ ] 5. Break the custom source's page layout on screen. *(Rehearse this for real first — see Phase 1 caveat about CLI heal reliability.)*
-- [ ] 6. Show the source-health warning — "0 valid jobs, required fields missing" — not a silent empty feed.
-- [ ] 7. Run `bdata scraper heal <collector_id> "<description>"`.
-- [ ] 8. Re-run the collector, show the same Collector ID returning jobs again, recovered **inside the same feed**.
-- [ ] 9. Open one job card, show the deterministic "Shown because" match explanation.
+- [ ] 5. **Add a company live**: paste a real Bright Data API key and a chosen career page URL into the toolbar, narrate the live step-by-step progress ("Reading the page…" → "Writing the scraper…" → "Testing it against the real page…"), show the new company land in the feed. *(Rehearse against this exact site beforehand — see Phase 5.5's honest caveat: AI generation can hit a schema mismatch or a backend timeout. Have this pre-tested and working before recording, and know what you'll say if it doesn't cooperate live.)*
+- [ ] 6. Break the custom source's page layout on screen (the self-controlled mirror page). *(Rehearse this for real first — see Phase 1 caveat about CLI heal reliability, and Phase 1.5 for the current working mirror collector id.)*
+- [ ] 7. Show the source-health warning — "0 valid jobs, required fields missing" — not a silent empty feed.
+- [ ] 8. Run `bdata scraper heal <collector_id> "<description>" --url <verify-url> --auto-approve --auto-save`.
+- [ ] 9. Re-run the collector, show the same Collector ID returning jobs again, recovered **inside the same feed**.
 - [ ] 10. Close with the product statement below.
 
 ### Product statement (for README + video close)
@@ -345,9 +379,10 @@ weights. **Met.**
 
 ### README checklist (final)
 
-- [x] Setup instructions a stranger can follow from a clean clone
+- [x] Setup instructions a stranger can follow from a clean clone — **actually tested 2026-08-20** via a fresh `git clone` into a scratch directory, not just assumed: found and fixed a real bug in the process (`postinstall` script was missing, so `npm install` alone never generated the Prisma client — `npx prisma migrate dev` doesn't reliably do it either on this setup). Added `"postinstall": "prisma generate"` to `package.json`; re-verified the clone builds and serves the homepage correctly afterward.
 - [x] Clear explanation of how Scraper Studio is used (custom scraper role vs. library role — library role still TBD until Phase 2)
-- [ ] Example structured output (a sample normalized job JSON)
+- [x] Example structured output (a sample normalized job JSON) — `example-output.json`, two real records from the live database.
 - [ ] Demo video link
 - [x] AI-assistant disclosure (Claude Code used, all code/architecture reviewed and understood)
 - [x] Explain the dedup rule, the change-detection rule, and the matching rule weights in plain language — done, see README's "How deduplication, change detection, and matching work" section
+- [x] Self-service "add a company" (BYOK) explained in the README, with the honest reliability caveat included, not hidden.
