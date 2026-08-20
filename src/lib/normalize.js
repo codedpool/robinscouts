@@ -8,6 +8,29 @@ function normalizeEmploymentType(raw) {
   return "unspecified";
 }
 
+// Neither collector extracts the full job description (that would need a
+// second per-job page visit), so skills/experience are inferred from the
+// title alone. That's a real limitation, not a hidden one — it's called
+// out in the README's matching-rules section.
+const KNOWN_SKILLS = [
+  "python", "javascript", "typescript", "java", "go", "golang", "rust",
+  "react", "node", "kubernetes", "docker", "aws", "gcp", "azure", "sql",
+  "fastapi", "django", "flask", "ruby", "rails", "graphql", "c++", "c#",
+  "swift", "kotlin", "terraform", "spark", "hadoop", "ml", "ai",
+];
+
+function inferSkillsFromTitle(title) {
+  const lower = title.toLowerCase();
+  return KNOWN_SKILLS.filter((skill) => lower.includes(skill));
+}
+
+function inferExperienceFromTitle(title) {
+  const lower = title.toLowerCase();
+  if (/\b(senior|staff|lead|principal|sr\.?)\b/.test(lower)) return "senior";
+  if (/\b(junior|entry|graduate|new grad|jr\.?)\b/.test(lower)) return "entry-level";
+  return "unspecified";
+}
+
 // Shared shape across our collectors (Lever and Greenhouse both normalize to this):
 // { job_title, location, employment_type?, application_link, product_page_url }
 export function normalizeJobPosting(raw, { company, source }) {
@@ -16,6 +39,7 @@ export function normalizeJobPosting(raw, { company, source }) {
   const employmentType = normalizeEmploymentType(raw.employment_type);
   const applicationUrl = raw.application_link;
   const sourceUrl = raw.product_page_url || raw.application_link;
+  const titleNormalized = title.toLowerCase().replace(/\s+/g, " ").trim();
 
   const contentHash = crypto
     .createHash("sha256")
@@ -25,18 +49,17 @@ export function normalizeJobPosting(raw, { company, source }) {
   return {
     company,
     title,
-    titleNormalized: title.toLowerCase().replace(/\s+/g, " ").trim(),
+    titleNormalized,
     location: JSON.stringify(location ? [location] : []),
     employmentType,
-    experience: "unspecified",
-    skills: "[]",
+    experience: inferExperienceFromTitle(title),
+    skills: JSON.stringify(inferSkillsFromTitle(title)),
     salary: null,
     description: "",
     sourceUrl,
     applicationUrl,
     source,
     contentHash,
-    status: "active",
     rawJson: JSON.stringify(raw),
   };
 }
@@ -52,4 +75,23 @@ const NON_JOB_TITLE_PATTERN = /talent community|future (job )?opportunities/i;
 
 export function isRealJobPosting(raw) {
   return Boolean(raw?.job_title) && !NON_JOB_TITLE_PATTERN.test(raw.job_title);
+}
+
+// Describes what changed between two normalized versions of the same job,
+// for the "Shown because"-style change summary. Returns null if nothing
+// user-visible changed.
+export function describeChange(previous, next) {
+  const changes = [];
+  if (previous.title !== next.title) {
+    changes.push(`title changed: "${previous.title}" → "${next.title}"`);
+  }
+  const prevLocation = JSON.parse(previous.location || "[]").join(", ");
+  const nextLocation = JSON.parse(next.location || "[]").join(", ");
+  if (prevLocation !== nextLocation) {
+    changes.push(`location changed: ${prevLocation || "?"} → ${nextLocation || "?"}`);
+  }
+  if (previous.employmentType !== next.employmentType) {
+    changes.push(`employment type changed: ${previous.employmentType} → ${next.employmentType}`);
+  }
+  return changes.length > 0 ? changes.join("; ") : null;
 }

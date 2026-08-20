@@ -30,9 +30,13 @@ progresses. This README covers what's built so far.
   genuine — not staged — self-heal: we can actually edit that page's HTML
   structure and watch Scraper Studio heal against a real change, rather
   than just telling the AI to pretend something broke.
+- Deduplication across sources, full new/updated/possibly-closed change
+  detection, and deterministic rule-based match scoring with a "Shown
+  because" explanation — see below for how each works.
 
-Not built yet: deduplication across sources, change detection
-(new/updated/possibly-closed), and rule-based match scoring. These are next.
+Not built yet: company hiring-activity summaries (optional, lowest
+priority), the on-camera self-heal recording, and the example structured
+output file — these are next.
 
 ## Tech stack
 
@@ -82,6 +86,50 @@ manual step. We also keep a
 Pages) specifically so this can be demonstrated against a real structural
 change we make ourselves, not a simulated one — since the real target
 sites won't conveniently redesign themselves on demand.
+
+## How deduplication, change detection, and matching work
+
+**Deduplication** (`src/lib/dedup.js`): two jobs are treated as the same
+posting if they have the same `company` (case-insensitive), a similar
+title, and at least one matching location. "Similar" is Jaccard token
+overlap (shared words ÷ total unique words across both titles) at a 0.8
+threshold — deliberately *not* "shorter title's words are a subset of the
+longer one", because that scores "Backend Engineer" and "Backend Engineer
+II" as a perfect match. Jaccard correctly keeps those separate (0.667,
+below threshold) while still catching exact duplicates (1.0). When a match
+is found, the newer job is linked to the older one via `duplicateOfId` and
+hidden from the main feed; the canonical card shows "Found on N sources."
+Note: our current two sources (Onehouse, Sourcegraph) are different
+companies, so this logic is real and tested but hasn't fired on live
+overlapping data yet — only on synthetic test cases.
+
+**Change detection** (`src/app/api/refresh/route.js`): every job is
+matched across runs by its `applicationUrl`. A content hash (title +
+location + employment type) determines **New** (no prior match) vs.
+**Updated** (hash differs — the specific field that changed is stored and
+shown, not just "something changed") vs. **unchanged**. A job missing from
+a *healthy* run is flagged internally on the first miss but stays visible;
+it only becomes **Possibly closed** after a second consecutive healthy run
+still doesn't see it — and this logic never runs at all off the back of a
+failed/unhealthy scrape, so a broken source can't falsely mark jobs closed.
+
+**Matching** (`src/lib/matching.js`): fully deterministic, no LLM call in
+the scoring path — same job and same preferences always produce the same
+score and the same explanation.
+
+```
+skill overlap:     up to 50 pts (proportional to matched skills / preferred skills)
+location match:    25 pts (remote or specified location matches)
+experience fit:    15 pts (job's experience range overlaps preference)
+title match:       10 pts (role keyword match in normalized title)
+```
+
+The "Shown because" bullets on each card are generated directly from which
+rules fired. One honest limitation: neither collector extracts full job
+descriptions, so `skills` and `experience` are inferred from the job
+**title only** (a known-skills keyword list, and senior/staff/lead vs.
+junior/entry/graduate patterns) — deterministic, but shallower than
+full-text extraction would be.
 
 ## Setup
 

@@ -16,13 +16,13 @@ phase until the previous one is demo-able end to end.
 - [x] **Phase 0** — Hard constraints & submission basics (repo, README) — mostly done, 2 items deliberately deferred
 - [x] **Phase 1** — Stage 1: custom source + recovery loop — done, fully verified end to end
 - [x] **Phase 1.5** — Strengthening for Web-Slinger (grand prize track) — done 2026-08-20
-- [ ] **Phase 2** — Stage 2: second source + dedup — not started
-- [ ] **Phase 3** — Stage 3: change detection — not started
-- [ ] **Phase 4** — Stage 4: rule-based matching — not started
+- [x] **Phase 2** — Stage 2: second source + dedup — done 2026-08-20
+- [x] **Phase 3** — Stage 3: change detection — done 2026-08-20
+- [x] **Phase 4** — Stage 4: rule-based matching — done 2026-08-20
 - [ ] **Phase 5** — Stage 5: company hiring-activity summaries (optional, cut first) — not started
 - [ ] **Phase 6** — Final: demo video + full README + submission — not started
 
-Last updated: 2026-08-20.
+Last updated: 2026-08-20 (Phases 2–4 completed this session).
 
 ---
 
@@ -105,7 +105,7 @@ From the official rules — do not violate.
 - [x] README present, with Scraper Studio explanation and AI-assistant disclosure — basic version done, will evolve.
 - [ ] Example structured output committed to the repo — **deliberately deferred**, not forgotten.
 - [ ] Demo video — **deliberately deferred**, comes once more of the product is built.
-- [ ] README's plain-language explanations of dedup / change-detection / matching rules — blocked on Phases 2–4 existing.
+- [x] README's plain-language explanations of dedup / change-detection / matching rules.
 
 Also remember (not a checkbox, an ongoing readiness requirement): **you must be able to explain the scraper, architecture, and every decision above in your own words if a judge asks.** Judging criteria are impact, creativity, technical excellence, use of Scraper Studio, reliability/self-healing, and presentation — equal weight.
 
@@ -189,34 +189,99 @@ specifically, not a requirement to unlock it.
 
 ---
 
-## Phase 2 — Stage 2: Second source + deduplication
+## Phase 2 — Stage 2: Second source + deduplication ✅ done
 
-- [ ] Add one Bright Data pre-built/library source (via `/scrape` or `/trigger`) for a broader job source, normalized into the same schema. **Which library source is still an open decision — needs a pick before this phase can start.**
-- [ ] Add source labels visible on each job card (e.g. "Onehouse (custom)" vs. library source name) — keeps the custom source visibly attributed, not hidden. (Partially in place already: `JobCard` shows a source label pulled from `SOURCES` config — just needs a second entry.)
-- [ ] Add lightweight dedup: likely duplicate if `company` matches AND `title_normalized` is similar (token overlap or Levenshtein above a threshold) AND `location` matches. On a match, keep one canonical card, store the other under `duplicate_of`, show "Found on 2 sources."
-- [ ] **Verify dedup by hand on the actual demo pair before recording anything.** Confirm it doesn't over-merge two genuinely different roles at the same company (e.g. "Backend Engineer I" vs "Backend Engineer II").
+- [x] Second source added — but as a second **custom** Scraper Studio target
+  (Sourcegraph/Greenhouse, done in Phase 1.5) rather than a pre-built
+  library source. Satisfies "two sources, same schema"; a pre-built
+  library source is still a possible future addition but not required —
+  the custom-second-target choice was deliberate, see Phase 1.5's
+  reasoning (it's what actually strengthens the Web-Slinger case).
+- [x] Source labels on each job card — `JobCard` shows the label from
+  `SOURCES` config.
+- [x] Dedup logic — `src/lib/dedup.js`, `findDuplicate()`. Likely-duplicate
+  rule: same `company` (case-insensitive) + title similarity ≥ 0.8
+  (Jaccard token overlap) + at least one matching `location`. On match,
+  the new job is stored with `duplicateOfId` pointing at the canonical
+  job; `Feed.js` filters duplicates out of the main list and shows "Found
+  on N sources" on the canonical card.
+- [x] **Verified by hand, and a real bug found and fixed in the
+  process**: the first version used `shared / min(sizeA, sizeB)` for
+  title similarity, which scored "Backend Engineer" vs "Backend Engineer
+  II" as a perfect match (the shorter title's tokens are a full subset of
+  the longer one) — exactly the over-merge case this plan warned about.
+  Fixed by switching to proper Jaccard similarity (`shared / union`),
+  which correctly separates them (0.667, below the 0.8 threshold) while
+  still scoring exact duplicates at 1.0. Verified with a standalone script
+  covering: exact duplicate (merges), level-suffix variant (does not
+  merge), different company (does not merge), different location (does
+  not merge).
+- **Honest caveat:** Onehouse and Sourcegraph are different companies, so
+  this logic has never actually fired against real overlapping data — only
+  against synthetic test cases. It's real, tested code, but "verify on the
+  actual demo pair" (this section's original instruction) doesn't
+  currently apply since there is no real duplicate pair yet. Worth adding
+  a source with genuine overlap potential before final submission if time
+  allows, purely to show it firing on real data.
 
-**Phase 2 exit criteria:** one combined feed, two real sources, no visible duplicates in the demo dataset, custom source still contributing real cards to the feed.
+**Phase 2 exit criteria:** one combined feed, two real sources, no visible
+duplicates in the demo dataset, custom source still contributing real
+cards to the feed. **Met.**
 
 ---
 
-## Phase 3 — Stage 3: Change detection
+## Phase 3 — Stage 3: Change detection ✅ done
 
-- [ ] On every scrape run, compare `content_hash` against the previous stored value per job (matched by company + application_url or a stable identifier).
-- [ ] Classify:
-  - New → not seen in previous run.
-  - Updated → hash changed (location, experience, description, etc.) — store *what* changed, not just that something changed.
-  - Possibly closed → job missing from the current run, but only after the **source health check passed** (a successful run that returned other jobs normally) and the job was missing across more than one check. Never mark closed off the back of a failed/unhealthy run.
-- [ ] Never claim an exact posting date. Use "first seen X ago" / "updated since yesterday" language throughout (already the convention in `src/lib/time.js`) — don't fabricate a `posted_at` unless the source explicitly provides one.
+- [x] `content_hash` (of title + location + employment type) compared
+  against the stored value per job, matched by `applicationUrl` (the
+  stable identifier). Implemented in `src/app/api/refresh/route.js`.
+- [x] Classification, verified live end-to-end for all four states:
+  - **New** — not found by `applicationUrl` on this run.
+  - **Updated** — hash differs; `describeChange()` in `normalize.js`
+    stores *what* changed (e.g. "location changed: Bangalore → Remote"),
+    not just that something did, shown on the card as `changeSummary`.
+  - **Possibly closed** — a job missing from a *healthy* run gets
+    `missingSince` set on the first miss (still `active`, no badge yet);
+    only flips to `possibly_closed` if it's still missing on a
+    *second* consecutive healthy run. Reappearing at any point clears
+    `missingSince` and resets to `active`.
+  - **Source unhealthy** — unchanged from Phase 1, and structurally
+    guaranteed to never touch job statuses: the missing-job loop only
+    runs after the `validEntries.length === 0` unhealthy-path early
+    `continue`.
+  - Verified live: forced a real "new" (deleted a job, it came back
+    classified new), a real "updated" (mutated stored location/hash,
+    confirmed correct diff text), and a real "possibly closed" (pointed
+    the Onehouse source at a single detail page — legitimately fewer
+    results — for two consecutive runs, confirmed all 9 list jobs flipped
+    to `possibly_closed`; reverted to the real URL, confirmed all 9
+    recovered to `active`/`unchanged`).
+- [x] No fabricated dates — `src/lib/time.js`'s `timeAgo()` was already the
+  convention from Phase 1; `changeSummary`/`lastChangedAt` extend it
+  without introducing a fake `posted_at`.
+- **Real, documented side-finding**: running the Onehouse collector
+  against a single job *detail* page produces a different
+  `application_link` (ends in `/apply`) than the same job scraped via the
+  *list* page (no `/apply` suffix) — an artifact of the collector's
+  dual-mode parser. Since `applicationUrl` is the unique key, this would
+  create a duplicate row for the same job if the collector were ever run
+  in detail-page mode in production. Not a problem today (the app always
+  calls it with the list URL), but worth knowing before relying on the
+  detail-page fallback for anything real.
 
-**Phase 3 exit criteria:** feed clearly shows New / Updated / Possibly closed / Source unhealthy states, and the possibly-closed logic never fires off a failed run.
+**Phase 3 exit criteria:** feed clearly shows New / Updated / Possibly
+closed / Source unhealthy states, and the possibly-closed logic never
+fires off a failed run. **Met, verified live, not just by code review.**
 
 ---
 
-## Phase 4 — Stage 4: Transparent, rule-based matching
+## Phase 4 — Stage 4: Transparent, rule-based matching ✅ done
 
-- [ ] Build a simple preference form: role, location, employment type, skills.
-- [ ] Score every job deterministically — no LLM call in the scoring path:
+- [x] Preference form — `src/components/PreferencesForm.js`: role keyword,
+  location, employment type, experience level, skills (comma-separated).
+  Persisted to `localStorage`, no login/session needed.
+- [x] Deterministic scoring, no LLM anywhere in the path —
+  `src/lib/matching.js`, `scoreJob()`, exactly the weights below:
 
 ```
 skill overlap:     up to 50 pts (proportional to matched skills / preferred skills)
@@ -225,9 +290,24 @@ experience fit:    15 pts (job's experience range overlaps preference)
 title match:       10 pts (role keyword match in normalized title)
 ```
 
-- [ ] Generate the "Shown because" explanation directly from which rules fired — not a generative summary of the score. Same job + same preferences must always produce the same score and explanation, every time.
+- [x] "Shown because" reasons generated directly from which rules fired
+  (`reasons` array returned alongside the score) — same job + same
+  preferences always produces the same score, verifiable by reading
+  `matching.js` directly.
+- **Honest limitation, worth stating plainly (in the README too):**
+  neither collector extracts full job descriptions (that would need a
+  second per-job page visit per posting). `skills` and `experience` are
+  therefore inferred from the **title only**, via keyword matching
+  (`normalize.js`: a known-skills list, and senior/staff/lead vs.
+  junior/entry/graduate patterns). This is genuinely deterministic and
+  rule-based — matching the plan's "no LLM in the scoring path"
+  requirement — but the underlying signal is shallower than full-text
+  extraction would give. Fine for a hackathon demo; worth disclosing to a
+  judge who asks, not worth hiding.
 
-**Phase 4 exit criteria:** every job card can show a deterministic match % and a bullet-point reason list a judge can verify by reading the rule weights.
+**Phase 4 exit criteria:** every job card can show a deterministic match %
+and a bullet-point reason list a judge can verify by reading the rule
+weights. **Met.**
 
 ---
 
@@ -268,4 +348,4 @@ title match:       10 pts (role keyword match in normalized title)
 - [ ] Example structured output (a sample normalized job JSON)
 - [ ] Demo video link
 - [x] AI-assistant disclosure (Claude Code used, all code/architecture reviewed and understood)
-- [ ] Explain the dedup rule, the change-detection rule, and the matching rule weights in plain language — blocked on Phases 2–4
+- [x] Explain the dedup rule, the change-detection rule, and the matching rule weights in plain language — done, see README's "How deduplication, change detection, and matching work" section
