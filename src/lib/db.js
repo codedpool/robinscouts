@@ -1,15 +1,13 @@
-import path from "node:path";
-import { PrismaClient } from "@/generated/prisma";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient } from "../generated/prisma/index.js";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis;
 
-// Computed explicitly (not from DATABASE_URL) so it always matches wherever
-// this process's cwd is. prisma.config.ts resolves "file:./dev.db" relative
-// to the project root too, so this must stay in sync with that, not with
-// prisma/schema.prisma's directory.
-const dbPath = path.join(process.cwd(), "dev.db");
-const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
+// Neon's serverless driver talks to Postgres over HTTP/WebSocket instead of
+// a held-open TCP connection — the right fit for Vercel's serverless
+// functions, which can't rely on a long-lived connection pool the way a
+// traditional server can.
+const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 

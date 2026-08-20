@@ -21,9 +21,10 @@ phase until the previous one is demo-able end to end.
 - [x] **Phase 4** — Stage 4: rule-based matching — done 2026-08-20
 - [x] **Phase 5** — Stage 5: company hiring-activity summaries (optional, cut first) — done 2026-08-20
 - [x] **Phase 5.5** — UI redesign + self-service "add a company" (BYOK) — done 2026-08-20, not an original stage, see below
+- [x] **Phase 5.6** — Live deployment: Postgres/Neon migration + scheduled sync — done 2026-08-20, see below
 - [ ] **Phase 6** — Final: demo video + full README + submission — not started
 
-Last updated: 2026-08-20 (Phases 2–4 completed earlier in the day; Phase 5.5 added that evening).
+Last updated: 2026-08-20 (Phases 2–4 completed earlier in the day; Phase 5.5 and 5.6 added that evening).
 
 ---
 
@@ -346,6 +347,71 @@ scraper-generation a user-facing feature instead of a backend detail.
   timeout (not fixable from our side — Bright Data's own AI-Flow stage
   stalled). **Rehearse against the specific site you plan to demo before
   recording it live** — don't assume any arbitrary URL will work first try.
+
+---
+
+## Phase 5.6 — Live deployment: Postgres/Neon migration + scheduled sync
+
+Not one of the original stages — the user deployed to Vercel and hit
+`SQLITE_CANTOPEN`, which surfaced two real architectural facts we hadn't
+needed to face on localhost: a file-based SQLite DB doesn't exist in a
+serverless environment, and the `bdata` CLI (globally installed, locally
+logged in) doesn't either.
+
+- [x] Migrated `prisma/schema.prisma` from `sqlite` to `postgresql`,
+  switched `src/lib/db.js` from `@prisma/adapter-better-sqlite3` to
+  `@prisma/adapter-neon` (Neon's HTTP-based serverless driver — the right
+  fit for functions that can't hold a long-lived TCP pool open). Fresh
+  migration baseline against a real Neon database (old SQLite-dialect
+  migrations don't apply to Postgres, so the migration history was reset,
+  not preserved).
+- [x] Decided (after discussion) **not** to expose the operator's Bright
+  Data key as a public Vercel env var for on-demand visitor-triggered
+  refresh of the two built-in sources — partly a cost/exposure judgment
+  call, but also moot: Scraper Studio collectors are account-scoped, so a
+  different visitor's key couldn't run *our* collectors even if we wanted
+  it to. Instead: the two built-in sources are a **shared snapshot**,
+  refreshed on a schedule rather than by visitor clicks; BYOK-added
+  sources remain fully visitor-owned and live, exactly as in Phase 5.5.
+- [x] `@brightdata/cli` added as a real project dependency (was only a
+  global install before) — needed for both the scheduled sync below and
+  for the BYOK "add a company" flow to have any chance of working from a
+  fresh Vercel serverless function, which won't have anyone's global npm
+  installs. **Not yet verified working on an actual Vercel deployment** —
+  confirmed locally that the CLI runs correctly via `-k` without relying
+  on a logged-in session, but whether Vercel's Node serverless runtime
+  can spawn `bdata` as a child process the same way has not been tested
+  end-to-end against the live site.
+- [x] `scripts/refresh-static-sources.js` + `.github/workflows/refresh-static-sources.yml`:
+  a daily-cron (plus manual `workflow_dispatch`) GitHub Action that
+  re-syncs Onehouse and Sourcegraph against the shared Neon database,
+  reusing `refreshOneSource` verbatim — no separate/duplicated scraping
+  logic. Uses `BRIGHTDATA_API_KEY` + `DATABASE_URL` as GitHub Actions
+  secrets (this project's own operational credentials, not a visitor's —
+  a completely different trust situation from BYOK, see Phase 5.5).
+  Verified locally end-to-end (real key via env var, real write to Neon)
+  before being wired into the workflow file.
+- [x] Root `package.json` gained `"type": "module"` so the standalone
+  script could import the app's own `src/lib/*.js` files directly via
+  relative paths instead of duplicating logic — verified safe first (no
+  plain-CommonJS `.js` config files existed at the project root to
+  conflict with it), then confirmed via a full rebuild + dev server
+  restart that nothing broke.
+- [x] Fixed two real bugs surfaced only by testing this standalone script,
+  not by the main app (which never hit them): `src/lib/db.js` and
+  `src/lib/refreshSource.js` used the `@/...` path alias internally, which
+  only resolves through Next.js's own bundler — a plain `node` invocation
+  can't follow it. Switched both to relative imports (zero behavior change
+  inside Next.js, now also works standalone). Separately, ES modules
+  evaluate all static `import`s before the importing file's own top-level
+  code runs, so loading `.env` via `dotenv` had to happen before `db.js`
+  was imported at all — fixed by making that particular import dynamic
+  (`await import(...)`) instead of static.
+- **Not yet done:** add `DATABASE_URL` (and, if BYOK should work live,
+  nothing extra — visitor keys are never server-stored) to Vercel's
+  project environment variables, and add `DATABASE_URL` +
+  `BRIGHTDATA_API_KEY` as GitHub repository secrets, then trigger a
+  redeploy and confirm the live site actually loads.
 
 ---
 

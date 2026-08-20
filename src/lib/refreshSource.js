@@ -1,12 +1,12 @@
-import { prisma } from "@/lib/db";
-import { runCollector } from "@/lib/scraper";
+import { prisma } from "./db.js";
+import { runCollector } from "./scraper.js";
 import {
   normalizeJobPosting,
   isCrawlError,
   isRealJobPosting,
   describeChange,
-} from "@/lib/normalize";
-import { findDuplicate } from "@/lib/dedup";
+} from "./normalize.js";
+import { findDuplicate } from "./dedup.js";
 
 // Extracted verbatim from the original single-source loop body in
 // src/app/api/refresh/route.js so both the two built-in sources and a

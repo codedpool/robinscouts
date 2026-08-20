@@ -165,9 +165,13 @@ full-text extraction would be.
 
 ## Setup
 
-Requires Node.js and the [Bright Data CLI](https://github.com/brightdata/cli)
-(`npm i -g @brightdata/cli`, then `bdata login`) authenticated with access to
-the collector above.
+Requires Node.js, a Postgres database (we use [Neon](https://neon.tech) —
+`npx neonctl@latest init` gets you a free one and a connection string in
+seconds), and the [Bright Data CLI](https://github.com/brightdata/cli)
+authenticated locally (`bdata login`) with access to the two collectors
+above. `@brightdata/cli` is also a real project dependency now (not just a
+global install) so the self-service "add a company" flow and the scheduled
+sync below can invoke it without relying on your machine's login session.
 
 ```bash
 git clone https://github.com/codedpool/robinscouts.git
@@ -175,7 +179,7 @@ cd robinscouts
 npm install
 
 # create .env with:
-# DATABASE_URL="file:./dev.db"
+# DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
 
 npx prisma migrate dev
 npm run dev
@@ -188,6 +192,19 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000), then click "Check for
 new jobs" to run the scraper and populate the feed.
+
+### Keeping the deployed site's data fresh
+
+The live deployment can't run `bdata` itself — Vercel's serverless
+functions can't hold a logged-in CLI session or spawn a long-lived process
+the way local dev can. Instead, [`.github/workflows/refresh-static-sources.yml`](.github/workflows/refresh-static-sources.yml)
+re-syncs the two built-in sources once a day (and on demand via "Run
+workflow") using [`scripts/refresh-static-sources.js`](scripts/refresh-static-sources.js) —
+the exact same `refreshOneSource` logic the app itself uses, just pointed
+at the shared production database with this project's own Bright Data key
+(`BRIGHTDATA_API_KEY` and `DATABASE_URL` as GitHub Actions secrets, never a
+visitor's key — visitor-supplied keys are never persisted anywhere, see
+below).
 
 ## Example structured output
 

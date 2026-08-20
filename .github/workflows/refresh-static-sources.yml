@@ -1,0 +1,25 @@
+name: Refresh static job sources
+
+# Keeps the two built-in sources (Onehouse, Sourcegraph) in sync with the
+# shared production database. The deployed app itself can't do this on a
+# schedule — Vercel's serverless functions can't run the bdata CLI or hold
+# a logged-in CLI session — so this runs here instead, once a day, using
+# this project's own Bright Data key (never a visitor's).
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run refresh:static
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BRIGHTDATA_API_KEY: ${{ secrets.BRIGHTDATA_API_KEY }}

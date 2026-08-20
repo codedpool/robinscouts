@@ -2,16 +2,21 @@
   "name": "robinscouts",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "refresh:static": "node scripts/refresh-static-sources.js"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.9.1",
+    "@brightdata/cli": "^0.3.5",
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "dotenv": "^17.4.2",
     "next": "16.3.1",
     "prisma": "^7.9.1",
     "react": "19.2.8",
