@@ -26,15 +26,32 @@ export default function RefreshButton() {
   }
 
   return (
-    <div className="flex flex-col items-end gap-2">
+    <div className="flex items-center gap-2">
+      {error && <p className="max-w-[16rem] truncate text-xs text-red-600">{error}</p>}
       <button
         onClick={handleClick}
         disabled={isPending}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 rounded-md bg-[#ee5a2c] px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-[#d94a1e] disabled:cursor-not-allowed disabled:opacity-60"
       >
+        {isPending && (
+          <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+        )}
         {isPending ? "Checking…" : "Check for new jobs"}
       </button>
-      {error && <p className="max-w-xs text-right text-xs text-red-600">{error}</p>}
     </div>
   );
 }

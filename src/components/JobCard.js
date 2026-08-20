@@ -1,92 +1,89 @@
 import { timeAgo } from "@/lib/time";
 import { SOURCES } from "@/lib/sources";
 
-const CHANGE_BADGES = {
-  new: { label: "New", className: "bg-emerald-100 text-emerald-700" },
-  updated: { label: "Updated", className: "bg-amber-100 text-amber-700" },
-  possibly_closed: {
-    label: "Possibly closed",
-    className: "bg-slate-200 text-slate-600",
-  },
+const STATUS_STYLE = {
+  new: { label: "New", dot: "bg-emerald-500", text: "text-emerald-600" },
+  updated: { label: "Updated", dot: "bg-amber-500", text: "text-amber-600" },
+  possibly_closed: { label: "Possibly closed", dot: "bg-stone-300", text: "text-stone-400" },
 };
 
 export default function JobCard({ job, score, reasons }) {
   const locations = JSON.parse(job.location || "[]");
-  const sourceLabel = SOURCES[job.source]?.label || job.source;
-  const changeBadge =
-    job.status === "possibly_closed"
-      ? CHANGE_BADGES.possibly_closed
-      : CHANGE_BADGES[job.lastRunChangeType];
+  const sourceLabel = SOURCES[job.source]?.shortLabel || job.source;
+  const closed = job.status === "possibly_closed";
+  const status = closed ? STATUS_STYLE.possibly_closed : STATUS_STYLE[job.lastRunChangeType];
 
   return (
     <li
-      className={`rounded-lg border p-4 shadow-sm ${
-        job.status === "possibly_closed"
-          ? "border-slate-200 bg-slate-50 opacity-70"
-          : "border-slate-200"
+      className={`grid grid-cols-[6px_minmax(0,1fr)_7rem_5.5rem_5.5rem] items-center gap-4 px-4 py-3 transition-colors hover:bg-stone-50 ${
+        closed ? "opacity-50" : ""
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-slate-900">{job.title}</h3>
-            {changeBadge && (
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${changeBadge.className}`}>
-                {changeBadge.label}
-              </span>
-            )}
-            {job.duplicateCount > 0 && (
-              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
-                Found on {job.duplicateCount + 1} sources
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-slate-600">{job.company}</p>
+      <span
+        className={`h-1.5 w-1.5 justify-self-center rounded-full ${status ? status.dot : "bg-transparent"}`}
+        aria-hidden="true"
+      />
+
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-baseline gap-x-1.5">
+          <h3 className="truncate font-medium text-[#16233f]">{job.title}</h3>
+          <span className="shrink-0 text-sm text-stone-500">at {job.company}</span>
+          {status && (
+            <span className={`shrink-0 text-xs font-medium ${status.text}`}>
+              {status.label}
+            </span>
+          )}
+          {job.duplicateCount > 0 && (
+            <span className="shrink-0 text-xs text-stone-400">
+              · on {job.duplicateCount + 1} sources
+            </span>
+          )}
         </div>
-        <span className="whitespace-nowrap rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-          {sourceLabel}
-        </span>
+        <p className="mt-0.5 truncate text-xs text-stone-500">
+          {locations.join(", ")} · {job.employmentType} · first seen{" "}
+          {timeAgo(job.firstSeenAt)}
+          {job.changeSummary && (
+            <span className="text-amber-700"> · changed: {job.changeSummary}</span>
+          )}
+        </p>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-        {locations.map((loc) => (
-          <span key={loc} className="rounded bg-slate-50 px-2 py-1">
-            {loc}
-          </span>
-        ))}
-        <span className="rounded bg-slate-50 px-2 py-1">{job.employmentType}</span>
-      </div>
+      <span className="truncate text-xs text-stone-400">{sourceLabel}</span>
 
-      {job.changeSummary && (
-        <p className="mt-2 text-xs text-amber-700">Changed: {job.changeSummary}</p>
-      )}
-
-      {score !== null && score !== undefined && (
-        <div className="mt-2 rounded-md bg-slate-50 px-3 py-2">
-          <p className="text-xs font-semibold text-slate-700">
-            {score}% match
-          </p>
+      {score !== null && score !== undefined ? (
+        <details className="group/score relative justify-self-end">
+          <summary className="flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden">
+            <span
+              className={`text-sm font-semibold ${score > 0 ? "text-[#ee5a2c]" : "text-stone-300"}`}
+            >
+              {score}%
+            </span>
+            {reasons.length > 0 && (
+              <span className="text-[10px] text-stone-400 transition-transform group-open/score:-rotate-180">
+                ▾
+              </span>
+            )}
+          </summary>
           {reasons.length > 0 && (
-            <ul className="mt-1 list-disc pl-4 text-xs text-slate-600">
+            <ul className="absolute right-0 top-full z-10 mt-2 w-64 space-y-1 rounded-md border border-stone-200 bg-white p-2.5 text-left text-xs text-stone-600 shadow-lg">
               {reasons.map((reason) => (
                 <li key={reason}>{reason}</li>
               ))}
             </ul>
           )}
-        </div>
+        </details>
+      ) : (
+        <span />
       )}
 
-      <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-        <span>first seen {timeAgo(job.firstSeenAt)}</span>
-        <a
-          href={job.applicationUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="font-medium text-slate-900 underline underline-offset-2 hover:text-slate-600"
-        >
-          Apply →
-        </a>
-      </div>
+      <a
+        href={job.applicationUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="justify-self-end rounded-md bg-[#ee5a2c] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#d94a1e]"
+      >
+        Apply ↗
+      </a>
     </li>
   );
 }

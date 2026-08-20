@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import PreferencesForm from "@/components/PreferencesForm";
 import RefreshButton from "@/components/RefreshButton";
 import SourceStatusBanner from "@/components/SourceStatusBanner";
 import JobCard from "@/components/JobCard";
-import CompanySummary from "@/components/CompanySummary";
 import { EMPTY_PREFERENCES, hasAnyPreference, scoreJob } from "@/lib/matching";
 import { summarizeByCompany } from "@/lib/companySummary";
 
@@ -69,37 +69,67 @@ export default function Feed({ jobs, statuses }) {
     [jobs, preferences, matching]
   );
 
+  const activeCount = jobs.filter((j) => !j.duplicateOfId && j.status !== "possibly_closed").length;
+  const companyCount = new Set(
+    jobs.filter((j) => !j.duplicateOfId).map((j) => j.company)
+  ).size;
+
   return (
     <>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">RobinScouts</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            A hiring-change intelligence feed — what&apos;s new or changed
-            since you last checked.
-          </p>
+      <header className="border-b border-[#ece4d6] bg-[#fdf8f0]">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <Image
+            src="/robinscoutshorizontal.png"
+            alt="RobinScouts"
+            width={1774}
+            height={887}
+            priority
+            className="h-9 w-auto mix-blend-multiply sm:h-10"
+          />
+          <RefreshButton />
         </div>
-        <RefreshButton />
-      </div>
+      </header>
 
-      <div className="mt-6 space-y-4">
-        <CompanySummary summaries={companySummaries} matching={matching} />
-        <PreferencesForm preferences={preferences} onChange={updatePreferences} />
-        <SourceStatusBanner statuses={statuses} />
-      </div>
+      <SourceStatusBanner statuses={statuses} />
 
-      {visibleJobs.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-slate-500">
-          No jobs match right now — click &quot;Check for new jobs&quot; or
-          loosen your preferences.
-        </p>
-      ) : (
-        <ul className="mt-6 space-y-3">
-          {visibleJobs.map(({ job, score, reasons }) => (
-            <JobCard key={job.id} job={job} score={score} reasons={reasons} />
+      <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-stone-500">
+          <span>
+            <span className="font-semibold text-[#16233f]">{activeCount}</span> open
+            roles across <span className="font-semibold text-[#16233f]">{companyCount}</span>{" "}
+            {companyCount === 1 ? "company" : "companies"}
+          </span>
+          {companySummaries.map((entry) => (
+            <span key={entry.company}>
+              <span className="mx-1.5 text-stone-300">·</span>
+              {entry.company}{" "}
+              <span className="font-medium text-[#16233f]">+{entry.postedThisWeek}</span> this
+              week
+              {matching && entry.matchedThisWeek > 0 && (
+                <>
+                  {" "}
+                  (<span className="font-medium text-[#ee5a2c]">{entry.matchedThisWeek} match</span>)
+                </>
+              )}
+            </span>
           ))}
-        </ul>
-      )}
+        </div>
+
+        <PreferencesForm preferences={preferences} onChange={updatePreferences} />
+
+        {visibleJobs.length === 0 ? (
+          <p className="mt-10 text-center text-sm text-stone-400">
+            No jobs match right now — click &quot;Check for new jobs&quot; or
+            loosen your preferences.
+          </p>
+        ) : (
+          <ul className="mt-5 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+            {visibleJobs.map(({ job, score, reasons }) => (
+              <JobCard key={job.id} job={job} score={score} reasons={reasons} />
+            ))}
+          </ul>
+        )}
+      </div>
     </>
   );
 }

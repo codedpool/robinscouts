@@ -10,10 +10,8 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="flex-1 bg-zinc-50">
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <Feed jobs={jobs} statuses={statuses} />
-      </main>
+    <div className="min-h-screen bg-[#fdf8f0]">
+      <Feed jobs={jobs} statuses={statuses} />
     </div>
   );
 }

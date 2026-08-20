@@ -15,6 +15,9 @@ export const metadata = {
   title: "RobinScouts",
   description:
     "A hiring-change intelligence feed — what's new or changed in public job postings, and why it matches you.",
+  icons: {
+    icon: "/robinscouts.png",
+  },
 };
 
 export default function RootLayout({ children }) {

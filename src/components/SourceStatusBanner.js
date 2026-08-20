@@ -3,17 +3,17 @@ export default function SourceStatusBanner({ statuses }) {
   if (unhealthy.length === 0) return null;
 
   return (
-    <div className="space-y-2">
-      {unhealthy.map((s) => (
-        <div
-          key={s.source}
-          className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
-        >
-          <strong>{s.label}</strong> is unhealthy — last check returned 0 valid
-          jobs{s.lastError ? `: ${s.lastError}` : "."} Showing the last
-          known-good data below, not a silent empty feed.
-        </div>
-      ))}
+    <div className="border-b border-amber-200 bg-amber-50">
+      <div className="mx-auto max-w-5xl space-y-1 px-6 py-2">
+        {unhealthy.map((s) => (
+          <p key={s.source} className="text-xs text-amber-800">
+            <strong className="font-medium text-amber-900">{s.label}</strong> is
+            unhealthy — last check returned 0 valid jobs
+            {s.lastError ? `: ${s.lastError}` : "."} Showing the last known-good
+            data below, not a silent empty feed.
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
