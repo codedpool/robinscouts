@@ -58,16 +58,13 @@
     margin: 0 0 3rem;
   }
 
-  .role-list {
+  .job-listing {
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
   }
 
-  .role {
+  .job {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -79,19 +76,19 @@
     transition: border-color 0.15s ease, transform 0.15s ease;
   }
 
-  .role:hover {
+  .job:hover {
     border-color: #d8d3ca;
     transform: translateY(-1px);
   }
 
-  .role-name {
+  .job-title {
     font-size: 1.05rem;
     font-weight: 600;
     margin: 0 0 0.3rem;
     letter-spacing: -0.01em;
   }
 
-  .role-loc {
+  .job-location {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -99,7 +96,7 @@
     color: var(--ink-soft);
   }
 
-  .role-loc::before {
+  .job-location::before {
     content: "";
     width: 6px;
     height: 6px;
@@ -108,7 +105,7 @@
     flex-shrink: 0;
   }
 
-  .role-link {
+  .job-apply {
     flex-shrink: 0;
     font-size: 0.85rem;
     font-weight: 600;
@@ -121,7 +118,7 @@
     transition: background 0.15s ease, color 0.15s ease;
   }
 
-  .role-link:hover {
+  .job-apply:hover {
     background: var(--accent);
     color: #fff;
   }
@@ -143,29 +140,29 @@
     <h1>Careers at RobinTest</h1>
     <p class="intro">A small static page we fully control, used to demonstrate a genuine — not staged — Bright Data Scraper Studio self-heal against a real structural change.</p>
 
-    <ul class="role-list">
-      <li class="role">
-        <div class="role-meta">
-          <h2 class="role-name">Backend Engineer</h2>
-          <span class="role-loc">Remote</span>
+    <div class="job-listing">
+      <div class="job">
+        <div>
+          <h2 class="job-title">Backend Engineer</h2>
+          <span class="job-location">Remote</span>
         </div>
-        <a class="role-link" href="https://github.com/codedpool/robinscouts">Apply</a>
-      </li>
-      <li class="role">
-        <div class="role-meta">
-          <h2 class="role-name">Frontend Engineer</h2>
-          <span class="role-loc">San Francisco, CA</span>
+        <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
+      </div>
+      <div class="job">
+        <div>
+          <h2 class="job-title">Frontend Engineer</h2>
+          <span class="job-location">San Francisco, CA</span>
         </div>
-        <a class="role-link" href="https://github.com/codedpool/robinscouts">Apply</a>
-      </li>
-      <li class="role">
-        <div class="role-meta">
-          <h2 class="role-name">Product Designer</h2>
-          <span class="role-loc">New York, NY</span>
+        <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
+      </div>
+      <div class="job">
+        <div>
+          <h2 class="job-title">Product Designer</h2>
+          <span class="job-location">New York, NY</span>
         </div>
-        <a class="role-link" href="https://github.com/codedpool/robinscouts">Apply</a>
-      </li>
-    </ul>
+        <a class="job-apply" href="https://github.com/codedpool/robinscouts">Apply</a>
+      </div>
+    </div>
 
     <footer>
       Part of <a href="https://github.com/codedpool/robinscouts">RobinScouts</a> — built for Into the Scrape-Verse (WeMakeDevs × Bright Data).
