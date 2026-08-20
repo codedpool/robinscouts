@@ -19,7 +19,7 @@ phase until the previous one is demo-able end to end.
 - [x] **Phase 2** — Stage 2: second source + dedup — done 2026-08-20
 - [x] **Phase 3** — Stage 3: change detection — done 2026-08-20
 - [x] **Phase 4** — Stage 4: rule-based matching — done 2026-08-20
-- [ ] **Phase 5** — Stage 5: company hiring-activity summaries (optional, cut first) — not started
+- [x] **Phase 5** — Stage 5: company hiring-activity summaries (optional, cut first) — done 2026-08-20
 - [ ] **Phase 6** — Final: demo video + full README + submission — not started
 
 Last updated: 2026-08-20 (Phases 2–4 completed this session).
@@ -311,9 +311,11 @@ weights. **Met.**
 
 ---
 
-## Phase 5 — Stage 5: Company hiring-activity summaries (optional — cut first if short on time)
+## Phase 5 — Stage 5: Company hiring-activity summaries ✅ done (optional — cut first if short on time)
 
-- [ ] Only attempt after Phases 1–4 are solid and there's time left on day 5+. Summarize per-company posting velocity ("Company A posted 4 roles this week, 2 match your profile"). Nice-to-have — do not let it threaten Phase 1–4 stability or eat into demo/README time.
+- [x] Attempted after Phases 1–4 were solid, with time left — `src/lib/companySummary.js` (`summarizeByCompany`) + `src/components/CompanySummary.js`. Groups active, non-duplicate jobs by company; counts how many were `firstSeenAt` within the last 7 days ("posted this week" — using our own observation time, not a fabricated real posting date, consistent with the plan's "never claim an exact posting date" rule); when preferences are set, also counts how many of those score > 0 via the same deterministic `scoreJob()` from Phase 4.
+- [x] Verified live: renders "Onehouse posted 9 roles this week." / "Sourcegraph posted 7 roles this week." with no preferences set; with a role preference of "engineer," correctly shows 7/9 and 4/7 matched counts respectively (checked directly against `scoreJob`, matches the title-keyword logic exactly).
+- Still optional/cuttable in spirit — this is the first thing to rip out if Phase 6 time gets tight, per the plan's own cut order.
 
 ---
 

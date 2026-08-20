@@ -5,7 +5,9 @@ import PreferencesForm from "@/components/PreferencesForm";
 import RefreshButton from "@/components/RefreshButton";
 import SourceStatusBanner from "@/components/SourceStatusBanner";
 import JobCard from "@/components/JobCard";
+import CompanySummary from "@/components/CompanySummary";
 import { EMPTY_PREFERENCES, hasAnyPreference, scoreJob } from "@/lib/matching";
+import { summarizeByCompany } from "@/lib/companySummary";
 
 const STORAGE_KEY = "robinscouts-preferences";
 
@@ -62,6 +64,11 @@ export default function Feed({ jobs, statuses }) {
       .sort((a, b) => b.score - a.score);
   }, [jobs, preferences, matching, duplicateCounts]);
 
+  const companySummaries = useMemo(
+    () => summarizeByCompany(jobs, preferences, matching),
+    [jobs, preferences, matching]
+  );
+
   return (
     <>
       <div className="flex items-start justify-between gap-4">
@@ -76,6 +83,7 @@ export default function Feed({ jobs, statuses }) {
       </div>
 
       <div className="mt-6 space-y-4">
+        <CompanySummary summaries={companySummaries} matching={matching} />
         <PreferencesForm preferences={preferences} onChange={updatePreferences} />
         <SourceStatusBanner statuses={statuses} />
       </div>

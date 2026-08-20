@@ -33,10 +33,12 @@ progresses. This README covers what's built so far.
 - Deduplication across sources, full new/updated/possibly-closed change
   detection, and deterministic rule-based match scoring with a "Shown
   because" explanation — see below for how each works.
+- Per-company hiring-activity summaries ("Onehouse posted 9 roles this
+  week, 7 match your profile"), based on our own `firstSeenAt` tracking
+  rather than a fabricated real posting date.
 
-Not built yet: company hiring-activity summaries (optional, lowest
-priority), the on-camera self-heal recording, and the example structured
-output file — these are next.
+Not built yet: the on-camera self-heal recording and the example
+structured output file — these are next.
 
 ## Tech stack
 
