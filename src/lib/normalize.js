@@ -33,12 +33,17 @@ function inferExperienceFromTitle(title) {
 
 // Shared shape across our collectors (Lever and Greenhouse both normalize to this):
 // { job_title, location, employment_type?, application_link, product_page_url }
+//
+// Self-service "add a company" sources ask the AI-generated scraper for this
+// exact shape too, but codegen for an arbitrary user-supplied site can't be
+// guaranteed to match it perfectly every time — so each field falls back to
+// a couple of common aliases rather than assuming the canonical name landed.
 export function normalizeJobPosting(raw, { company, source }) {
-  const title = (raw.job_title || "").trim();
+  const title = (raw.job_title || raw.title || "").trim();
   const location = (raw.location || "").trim();
-  const employmentType = normalizeEmploymentType(raw.employment_type);
-  const applicationUrl = raw.application_link;
-  const sourceUrl = raw.product_page_url || raw.application_link;
+  const employmentType = normalizeEmploymentType(raw.employment_type || raw.type);
+  const applicationUrl = raw.application_link || raw.apply_url || raw.url;
+  const sourceUrl = raw.product_page_url || applicationUrl;
   const titleNormalized = title.toLowerCase().replace(/\s+/g, " ").trim();
 
   const contentHash = crypto
@@ -74,7 +79,8 @@ export function isCrawlError(entry) {
 const NON_JOB_TITLE_PATTERN = /talent community|future (job )?opportunities/i;
 
 export function isRealJobPosting(raw) {
-  return Boolean(raw?.job_title) && !NON_JOB_TITLE_PATTERN.test(raw.job_title);
+  const title = raw?.job_title || raw?.title;
+  return Boolean(title) && !NON_JOB_TITLE_PATTERN.test(title);
 }
 
 // Describes what changed between two normalized versions of the same job,

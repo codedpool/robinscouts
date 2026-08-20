@@ -6,12 +6,13 @@ import PreferencesForm from "@/components/PreferencesForm";
 import RefreshButton from "@/components/RefreshButton";
 import SourceStatusBanner from "@/components/SourceStatusBanner";
 import JobCard from "@/components/JobCard";
+import AddCompanyForm from "@/components/AddCompanyForm";
 import { EMPTY_PREFERENCES, hasAnyPreference, scoreJob } from "@/lib/matching";
 import { summarizeByCompany } from "@/lib/companySummary";
 
 const STORAGE_KEY = "robinscouts-preferences";
 
-export default function Feed({ jobs, statuses }) {
+export default function Feed({ jobs, statuses, sources }) {
   const [preferences, setPreferences] = useState(EMPTY_PREFERENCES);
 
   useEffect(() => {
@@ -116,6 +117,7 @@ export default function Feed({ jobs, statuses }) {
         </div>
 
         <PreferencesForm preferences={preferences} onChange={updatePreferences} />
+        <AddCompanyForm />
 
         {visibleJobs.length === 0 ? (
           <p className="mt-10 text-center text-sm text-stone-400">
@@ -125,7 +127,7 @@ export default function Feed({ jobs, statuses }) {
         ) : (
           <ul className="mt-5 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
             {visibleJobs.map(({ job, score, reasons }) => (
-              <JobCard key={job.id} job={job} score={score} reasons={reasons} />
+              <JobCard key={job.id} job={job} score={score} reasons={reasons} sources={sources} />
             ))}
           </ul>
         )}

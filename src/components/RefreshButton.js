@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { API_KEY_STORAGE } from "@/lib/clientKey";
 
 export default function RefreshButton() {
   const router = useRouter();
@@ -11,7 +12,17 @@ export default function RefreshButton() {
   async function handleClick() {
     setError(null);
     try {
-      const res = await fetch("/api/refresh", { method: "POST" });
+      let apiKey = null;
+      try {
+        apiKey = sessionStorage.getItem(API_KEY_STORAGE);
+      } catch {
+        // ignore unavailable storage
+      }
+      const res = await fetch("/api/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(apiKey ? { apiKey } : {}),
+      });
       const data = await res.json();
       const failed = Object.entries(data.results || {}).filter(
         ([, r]) => !r.ok

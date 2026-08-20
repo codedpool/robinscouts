@@ -36,9 +36,11 @@ model Job {
   status           String   @default("active") // active | possibly_closed
   duplicateOfId    String?
   rawJson          String // raw scraper output for this record, for debugging
+  sessionId        String? // null for the two static sources; set for a visitor-added source's jobs
 
   @@index([source])
   @@index([status])
+  @@index([sessionId])
 }
 
 model SourceStatus {
@@ -49,4 +51,21 @@ model SourceStatus {
   lastSuccessAt DateTime?
   lastError     String?
   jobCount      Int       @default(0)
+}
+
+// A visitor-added source, created live via their own Bright Data API key.
+// The two built-in sources (Onehouse, Sourcegraph) are NOT rows here — they
+// stay in src/lib/sources.js. Only self-service "add a company" sources
+// live in this table, scoped to the browser session that created them.
+model Source {
+  id          String   @id @default(uuid())
+  key         String   @unique // matches Job.source, e.g. "user-acme-corp-<ts>"
+  label       String
+  company     String
+  url         String
+  collectorId String
+  sessionId   String
+  createdAt   DateTime @default(now())
+
+  @@index([sessionId])
 }

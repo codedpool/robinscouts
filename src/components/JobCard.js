@@ -1,5 +1,4 @@
 import { timeAgo } from "@/lib/time";
-import { SOURCES } from "@/lib/sources";
 
 const STATUS_STYLE = {
   new: { label: "New", dot: "bg-emerald-500", text: "text-emerald-600" },
@@ -7,9 +6,9 @@ const STATUS_STYLE = {
   possibly_closed: { label: "Possibly closed", dot: "bg-stone-300", text: "text-stone-400" },
 };
 
-export default function JobCard({ job, score, reasons }) {
+export default function JobCard({ job, score, reasons, sources }) {
   const locations = JSON.parse(job.location || "[]");
-  const sourceLabel = SOURCES[job.source]?.shortLabel || job.source;
+  const sourceLabel = sources?.[job.source]?.shortLabel || job.source;
   const closed = job.status === "possibly_closed";
   const status = closed ? STATUS_STYLE.possibly_closed : STATUS_STYLE[job.lastRunChangeType];
 
