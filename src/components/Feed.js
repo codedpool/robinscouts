@@ -102,6 +102,16 @@ export default function Feed({ jobs, statuses, sources }) {
         }}
       />
 
+      {/* Resolves to the site's paper color at the very bottom so the next
+          section (the closing image) can fade in from that same tone. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-14 sm:h-20"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(246,239,224,1) 0%, rgba(246,239,224,0) 100%)",
+        }}
+      />
+
       <div className="relative z-10 mx-auto max-w-6xl px-6 pb-16 pt-32 sm:pb-20 sm:pt-44">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

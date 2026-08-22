@@ -1,8 +1,7 @@
-import Image from "next/image";
 import { prisma } from "@/lib/db";
 import Feed from "@/components/Feed";
 import Hero from "@/components/Hero";
-import Footer from "@/components/Footer";
+import Closing from "@/components/Closing";
 import { getSessionId } from "@/lib/session";
 import { getSourcesForSession } from "@/lib/sourcesServer";
 
@@ -27,15 +26,7 @@ export default async function Home() {
       <div id="app">
         <Feed jobs={jobs} statuses={statuses} sources={sources} />
       </div>
-      <Image
-        src="/last.png"
-        alt="A hiker on a mountainside watches job listings arrive from a robin's search, connected by dotted lines, with a city visible in the valley below"
-        width={1774}
-        height={887}
-        className="h-auto w-full"
-        sizes="100vw"
-      />
-      <Footer />
+      <Closing />
     </div>
   );
 }
