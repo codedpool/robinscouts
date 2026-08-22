@@ -14,6 +14,7 @@ const STORAGE_KEY = "robinscouts-preferences";
 
 export default function Feed({ jobs, statuses, sources }) {
   const [preferences, setPreferences] = useState(EMPTY_PREFERENCES);
+  const [showAddCompany, setShowAddCompany] = useState(false);
 
   useEffect(() => {
     try {
@@ -94,15 +95,15 @@ export default function Feed({ jobs, statuses, sources }) {
           mountain photo dissolves into this section's sky rather than
           cutting hard at the seam. */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 z-1 h-40 sm:h-56"
+        className="pointer-events-none absolute inset-x-0 top-0 z-1 h-28 sm:h-40"
         style={{
           background:
             "linear-gradient(to bottom, rgba(10,8,5,1) 0%, rgba(10,8,5,0.55) 45%, rgba(10,8,5,0) 100%)",
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6 pb-16 pt-48 sm:pb-24 sm:pt-64">
-        <div className="flex flex-wrap items-end justify-between gap-6">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 pb-16 pt-32 sm:pb-20 sm:pt-44">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--ink-soft)]">
               Scouting report
@@ -111,7 +112,7 @@ export default function Feed({ jobs, statuses, sources }) {
               What the robin found while you were gone
             </h2>
 
-            <div className="mt-4 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-[var(--ink-soft)]">
+            <div className="mt-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-[var(--ink-soft)]">
               <span>
                 <span className="font-semibold text-[var(--foreground)]">{activeCount}</span> open
                 roles across <span className="font-semibold text-[var(--foreground)]">{companyCount}</span>{" "}
@@ -137,14 +138,16 @@ export default function Feed({ jobs, statuses, sources }) {
           <RefreshButton />
         </div>
 
-        <div className="mt-8">
-          <SourceStatusBanner statuses={statuses} />
-        </div>
+        {statuses.some((s) => s.status === "unhealthy") && (
+          <div className="mt-6">
+            <SourceStatusBanner statuses={statuses} />
+          </div>
+        )}
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-stretch">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-stretch">
           <JobCarousel items={visibleJobs} sources={sources} />
 
-          <div className={`flex flex-col gap-6 p-6 sm:p-8 ${cardClass}`} style={cardStyle}>
+          <div className={`flex flex-col gap-5 p-6 sm:p-7 ${cardClass}`} style={cardStyle}>
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-soft)]">
                 Brief the scout
@@ -157,16 +160,41 @@ export default function Feed({ jobs, statuses, sources }) {
               </div>
             </div>
 
-            <div className="border-t pt-6" style={{ borderColor: "var(--paper-line)" }}>
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-soft)]">
-                New territory
-              </p>
-              <h3 className="mt-1 font-display text-xl font-medium text-[var(--foreground)]">
-                Track another company
-              </h3>
-              <div className="mt-4">
-                <AddCompanyForm />
-              </div>
+            <div className="border-t pt-5" style={{ borderColor: "var(--paper-line)" }}>
+              {showAddCompany ? (
+                <>
+                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-soft)]">
+                    New territory
+                  </p>
+                  <h3 className="mt-1 font-display text-xl font-medium text-[var(--foreground)]">
+                    Track another company
+                  </h3>
+                  <div className="mt-4">
+                    <AddCompanyForm />
+                  </div>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowAddCompany(true)}
+                  className="group flex w-full items-center justify-between gap-3 text-left"
+                >
+                  <span>
+                    <span className="block font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-soft)]">
+                      New territory
+                    </span>
+                    <span className="mt-1 block font-display text-xl font-medium text-[var(--foreground)]">
+                      Track another company
+                    </span>
+                  </span>
+                  <span
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full border text-lg text-[var(--foreground)] transition-colors group-hover:border-[var(--ember)]"
+                    style={{ borderColor: "var(--paper-line)" }}
+                  >
+                    +
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </div>

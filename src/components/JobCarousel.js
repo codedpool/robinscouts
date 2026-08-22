@@ -28,7 +28,7 @@ export default function JobCarousel({ items, sources }) {
   if (total === 0) {
     return (
       <div
-        className="flex h-full min-h-[22rem] flex-col items-center justify-center rounded-[28px] border p-8 text-center shadow-[0_20px_50px_-20px_rgba(30,25,15,0.35)]"
+        className="flex h-full min-h-[22rem] flex-col items-center justify-center rounded-[28px] border p-7 text-center shadow-[0_20px_50px_-20px_rgba(30,25,15,0.35)]"
         style={{ borderColor: "var(--paper-line)", backgroundColor: "#fbf6ea" }}
       >
         <p className="font-display text-xl text-[var(--foreground)]">
@@ -65,7 +65,7 @@ export default function JobCarousel({ items, sources }) {
 
       <div
         key={current.job.id}
-        className="relative h-full min-h-[22rem] flex-1 overflow-hidden rounded-[28px] border p-6 shadow-[0_20px_50px_-20px_rgba(30,25,15,0.35)] motion-safe:animate-[fadeIn_0.3s_ease] sm:p-8"
+        className="relative h-full min-h-[22rem] flex-1 overflow-hidden rounded-[28px] border p-6 shadow-[0_20px_50px_-20px_rgba(30,25,15,0.35)] motion-safe:animate-[fadeIn_0.3s_ease] sm:p-7"
         style={{ borderColor: "var(--paper-line)", backgroundColor: "#fbf6ea" }}
       >
         <svg
