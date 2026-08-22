@@ -432,11 +432,55 @@ logged in) doesn't either.
     *operator's* Bright Data key for any visitor who clicks it — exactly
     the cost/exposure scenario the shared-snapshot decision two bullets up
     was written to avoid. Before this fix it was a moot point (the button
-    silently failed for these two sources regardless); now it isn't. No
-    rate-limiting exists on `/api/refresh` today. Worth deciding
-    deliberately whether that's acceptable for the judging window's likely
-    traffic or whether the built-in sources should go back to
-    schedule-only by not falling back to the env var for them specifically.
+    silently failed for these two sources regardless); now it isn't.
+    **Resolved**: added a 30s DB-backed cooldown on the built-in sources
+    specifically (Onehouse, Sourcegraph, RobinTest) in `/api/refresh` —
+    repeated clicks within the window get the last known status back
+    immediately instead of re-invoking the collector. BYOK sources are
+    exempt since they bill the visitor's own key.
+  - Separately caught: the raw exception message from an unexpected
+    scraper failure (this bug's own error text, before the fix — the full
+    command line, collector ID, and shell output) was being stored and
+    shown verbatim in the public `SourceStatusBanner`. Fixed by logging
+    full detail server-side only and storing a short, generic message for
+    public display.
+- [x] **A second, separate production-breaking bug, found the same way —
+  by actually driving the deployed site, not by re-reading the code**:
+  the BYOK "add a company" flow never worked on Vercel either, and not
+  just because of the `bdata`-not-found bug above. Polling its own status
+  endpoint for 3+ minutes showed the job stuck at `"running"` with a null
+  step, forever. Root cause: the route kicked off scraper creation via an
+  **un-awaited** background promise and tracked its progress in a plain
+  in-memory `Map` (`src/lib/scraperJobs.js`) — the old code's own comment
+  predicted exactly this: *"a serverless host would need a real job queue
+  behind this instead."* Neither survives Vercel: a function isn't
+  guaranteed to keep running after its response is sent, and separate
+  requests aren't guaranteed to hit the same instance/memory.
+  - Fixed by reading `@brightdata/cli`'s own source (not guessing) to find
+    that `scraper create` is actually three plain REST calls underneath:
+    create a collector template, trigger AI generation against it (both
+    quick), then poll a progress endpoint until done (the part that takes
+    minutes). Reimplemented the first two as direct `fetch` calls in
+    `src/lib/scraper.js` (`triggerScraperCreation`) that return
+    immediately, and the poll as a single check per request
+    (`checkScraperCreationProgress`) — called once per browser status
+    poll instead of blocked on in a loop. A new `ScraperBuild` Prisma
+    table replaces the in-memory Map, so progress is visible correctly
+    regardless of which serverless instance handles a given poll. The
+    visitor's API key still never touches the database — it travels with
+    each status poll request from `sessionStorage`, same as everywhere
+    else in this app, since nothing about a build is held in server memory
+    between requests anymore for it to persist alongside.
+  - **Verified end-to-end against the actual live deployment, twice**:
+    real pipeline progress observed (`user_intent_analyzer` →
+    `code_generator` → `preview_runner`, matching the exact step names the
+    UI already knew how to label), collector genuinely created, build
+    reached `"done"`. One run's *first scrape* then hit a Bright Data
+    realtime-quota fallback to slow batch mode (very plausibly from this
+    session's own heavy testing today) that exceeded `runCollector`'s
+    180s timeout — a real, separate, narrower issue, not a regression of
+    this fix, and its raw error message got the same public-leak
+    treatment as above once caught.
 - [x] `scripts/refresh-static-sources.js` + `.github/workflows/refresh-static-sources.yml`:
   a daily-cron (plus manual `workflow_dispatch`) GitHub Action that
   re-syncs Onehouse and Sourcegraph against the shared Neon database,
