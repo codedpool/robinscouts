@@ -20,18 +20,29 @@ export default function Hero() {
         }}
       />
 
-      <div className="relative z-10 flex h-full flex-col px-6 py-8 sm:px-10 sm:py-10">
-        <div className="inline-flex w-fit rounded-lg bg-[#12100c]/55 px-3 py-1.5 backdrop-blur-sm">
-          <Image
-            src="/robinlogo.png"
-            alt="RobinScouts"
-            width={2048}
-            height={768}
-            className="h-12 w-auto sm:h-14"
-          />
-        </div>
+      {/* Soft light wash so the logo's own painted scene reads on the photo
+          without a hard container edge — no box, just brighter sky. */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[5]"
+        style={{
+          background:
+            "radial-gradient(ellipse 640px 360px at 100% 0%, rgba(255,250,236,0.55), rgba(255,250,236,0) 70%)",
+        }}
+      />
 
-        <div className="mt-10 max-w-xl">
+      <div className="absolute right-4 top-4 z-20 sm:right-8 sm:top-8">
+        <Image
+          src="/robinlogo.png"
+          alt="RobinScouts"
+          width={2048}
+          height={768}
+          priority
+          className="h-14 w-auto drop-shadow-[0_2px_14px_rgba(20,15,5,0.35)] sm:h-16"
+        />
+      </div>
+
+      <div className="relative z-10 flex h-full flex-col justify-end px-6 py-8 sm:px-10 sm:py-12">
+        <div className="max-w-xl">
           <h1 className="font-display text-4xl font-medium leading-[1.08] tracking-tight text-[#f8f4e8] sm:text-6xl">
             You stepped away.
             <br />
