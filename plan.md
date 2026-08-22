@@ -407,11 +407,21 @@ logged in) doesn't either.
   code runs, so loading `.env` via `dotenv` had to happen before `db.js`
   was imported at all — fixed by making that particular import dynamic
   (`await import(...)`) instead of static.
-- **Not yet done:** add `DATABASE_URL` (and, if BYOK should work live,
-  nothing extra — visitor keys are never server-stored) to Vercel's
-  project environment variables, and add `DATABASE_URL` +
-  `BRIGHTDATA_API_KEY` as GitHub repository secrets, then trigger a
-  redeploy and confirm the live site actually loads.
+- [x] `DATABASE_URL` added to Vercel's project env vars and
+  `DATABASE_URL`/`BRIGHTDATA_API_KEY` added as GitHub repository secrets
+  (user's own dashboard steps, done 2026-08-22) — live site confirmed
+  loading real data (`curl` status 200, 16 "Apply" links matching the
+  known 9+7 job count).
+- [x] **Manually triggered the scheduled workflow to verify it actually
+  works with the real secrets, not just locally** — first run failed with
+  `All attempts to open a WebSocket... failed` (Neon's serverless driver
+  needs an explicit WebSocket implementation in Node.js; apparently masked
+  in local dev by something in this machine's Node install, but a real,
+  reproducible failure on GitHub's runner). Fixed by installing `ws` and
+  setting `neonConfig.webSocketConstructor = ws` in `src/lib/db.js` —
+  re-triggered the workflow via `gh workflow run`, watched it with
+  `gh run watch`, confirmed a clean pass end-to-end using only the GitHub
+  secrets (no local machine involved at all).
 
 ---
 
