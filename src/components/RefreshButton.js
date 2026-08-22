@@ -38,11 +38,11 @@ export default function RefreshButton() {
 
   return (
     <div className="flex items-center gap-2">
-      {error && <p className="max-w-[16rem] truncate text-xs text-red-400">{error}</p>}
+      {error && <p className="max-w-[16rem] truncate text-xs text-red-600">{error}</p>}
       <button
         onClick={handleClick}
         disabled={isPending}
-        className="inline-flex items-center gap-1.5 rounded-md bg-[#ee5a2c] px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-[#ff6b3d] disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-1.5 rounded-md bg-[var(--ember)] px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-[#ff6b3d] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending && (
           <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">

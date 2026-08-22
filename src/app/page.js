@@ -20,7 +20,7 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="min-h-screen bg-[#0b0f1a]">
+    <div className="min-h-screen">
       <Hero />
       <div id="app">
         <Feed jobs={jobs} statuses={statuses} sources={sources} />

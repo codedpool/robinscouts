@@ -76,11 +76,11 @@ export default function Feed({ jobs, statuses, sources }) {
 
   return (
     <>
-      <header className="border-b border-white/8 bg-[#0b0f1a]">
+      <header className="border-b border-[var(--paper-line)] bg-[var(--background)]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <span className="text-lg font-semibold tracking-tight">
-            <span className="text-[#f5f1e8]">Robin</span>
-            <span className="text-[#ee5a2c]">Scouts</span>
+            <span className="text-[var(--foreground)]">Robin</span>
+            <span className="text-[var(--ember)]">Scouts</span>
           </span>
           <RefreshButton />
         </div>
@@ -88,23 +88,30 @@ export default function Feed({ jobs, statuses, sources }) {
 
       <SourceStatusBanner statuses={statuses} />
 
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-[#8891a8]">
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+          Field log
+        </p>
+        <h2 className="mt-2 font-display text-2xl font-medium text-[var(--foreground)] sm:text-3xl">
+          What&apos;s new since you last looked
+        </h2>
+
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-[var(--ink-soft)]">
           <span>
-            <span className="font-semibold text-[#f5f1e8]">{activeCount}</span> open
-            roles across <span className="font-semibold text-[#f5f1e8]">{companyCount}</span>{" "}
+            <span className="font-semibold text-[var(--foreground)]">{activeCount}</span> open
+            roles across <span className="font-semibold text-[var(--foreground)]">{companyCount}</span>{" "}
             {companyCount === 1 ? "company" : "companies"}
           </span>
           {companySummaries.map((entry) => (
             <span key={entry.company}>
-              <span className="mx-1.5 text-white/20">·</span>
+              <span className="mx-1.5 text-[var(--paper-line)]">·</span>
               {entry.company}{" "}
-              <span className="font-medium text-[#f5f1e8]">+{entry.postedThisWeek}</span> this
+              <span className="font-medium text-[var(--foreground)]">+{entry.postedThisWeek}</span> this
               week
               {matching && entry.matchedThisWeek > 0 && (
                 <>
                   {" "}
-                  (<span className="font-medium text-[#ee5a2c]">{entry.matchedThisWeek} match</span>)
+                  (<span className="font-medium text-[var(--ember)]">{entry.matchedThisWeek} match</span>)
                 </>
               )}
             </span>
@@ -115,12 +122,18 @@ export default function Feed({ jobs, statuses, sources }) {
         <AddCompanyForm />
 
         {visibleJobs.length === 0 ? (
-          <p className="mt-10 text-center text-sm text-white/40">
+          <p className="mt-10 text-center text-sm text-[var(--ink-soft)]">
             No jobs match right now — click &quot;Check for new jobs&quot; or
             loosen your preferences.
           </p>
         ) : (
-          <ul className="mt-5 divide-y divide-white/6 overflow-hidden rounded-xl border border-white/10 bg-[#131a2b] shadow-lg">
+          <ul
+            className="mt-6 divide-y divide-(--paper-line) overflow-hidden rounded-lg border shadow-[0_1px_2px_rgba(42,38,32,0.04)]"
+            style={{
+              borderColor: "var(--paper-line)",
+              backgroundColor: "#fbf6ea",
+            }}
+          >
             {visibleJobs.map(({ job, score, reasons }) => (
               <JobCard key={job.id} job={job} score={score} reasons={reasons} sources={sources} />
             ))}
