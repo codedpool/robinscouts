@@ -1,19 +1,24 @@
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
+import path from "node:path";
 
 const execFileAsync = promisify(execFile);
 
-// child_process's shell:true (required on Windows to run the bdata.cmd
-// shim at all) is documented to escape array args for the shell, but that
-// escaping is unreliable in practice for multi-word arguments on Windows —
-// confirmed by direct repro: a plain multi-word string passed as one array
-// element arrived at the child process split into one argv entry per word.
-// Manually quoting every argument ourselves fixes it (verified the same
-// way), and is a no-op for simple single-token args like a collector id.
-function quoteArg(value) {
-  const str = String(value);
-  return process.platform === "win32" ? `"${str.replace(/"/g, '\\"')}"` : str;
-}
+// Resolve the CLI's actual script rather than shelling out to the bare
+// `bdata` command. The bare command relies on `node_modules/.bin/bdata`
+// (a shim) being resolvable on PATH, which holds locally (npm puts
+// node_modules/.bin on PATH for npm scripts) but does NOT hold on Vercel's
+// serverless functions — confirmed empirically in production ("bdata:
+// command not found") even though the exact same code works in dev.
+// Invoking `node <resolved bin script>` directly sidesteps PATH/shim
+// resolution entirely, so it works the same way in both environments.
+//
+// A plain, static relative path (not require.resolve) on purpose: Next.js's
+// Turbopack build hands module code a `require` whose `.resolve()` returns
+// an internal numeric module id during page-data collection, not a real
+// file path — confirmed by a real build failure ("path argument must be of
+// type string, received type number") before switching to this.
+const CLI_BIN = path.join(process.cwd(), "node_modules/@brightdata/cli/dist/index.js");
 
 // Node's child_process error messages for a non-zero exit or timeout are
 // prefixed with "Command failed: <full command line>" — which would
@@ -39,8 +44,7 @@ export async function runCollector(collectorId, url, apiKey) {
   const args = apiKey ? ["-k", apiKey] : [];
   args.push("scraper", "run", collectorId, url, "--json");
   try {
-    const { stdout } = await execFileAsync("bdata", args.map(quoteArg), {
-      shell: true,
+    const { stdout } = await execFileAsync(process.execPath, [CLI_BIN, ...args], {
       timeout: 180_000,
       maxBuffer: 10 * 1024 * 1024,
     });
@@ -66,7 +70,7 @@ export function createCollector(url, prompt, { apiKey, name, onStep } = {}) {
     args.push("scraper", "create", url, prompt, "--json");
     if (name) args.push("--name", name);
 
-    const child = spawn("bdata", args.map(quoteArg), { shell: true });
+    const child = spawn(process.execPath, [CLI_BIN, ...args]);
 
     let stdout = "";
     let stderrBuffer = "";
