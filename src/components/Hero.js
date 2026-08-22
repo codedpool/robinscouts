@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="relative h-screen min-h-160 w-full overflow-hidden">
+    <section className="relative h-dvh min-h-160 w-full overflow-hidden">
       <Image
         src="/herorobin2.png"
         alt="A hiker rests on a mountainside with a laptop, a robin perched nearby on the trail overlooking a river valley"
@@ -16,7 +16,7 @@ export default function Hero() {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to top, rgba(10,8,5,0.85) 0%, rgba(10,8,5,0.6) 32%, rgba(10,8,5,0.15) 58%, rgba(10,8,5,0) 72%)",
+            "linear-gradient(to top, rgba(10,8,5,1) 0%, rgba(10,8,5,0.85) 4%, rgba(10,8,5,0.6) 32%, rgba(10,8,5,0.15) 58%, rgba(10,8,5,0) 72%)",
         }}
       />
 

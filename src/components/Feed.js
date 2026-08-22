@@ -80,7 +80,7 @@ export default function Feed({ jobs, statuses, sources }) {
   const cardStyle = { borderColor: "var(--paper-line)", backgroundColor: "#fbf6ea" };
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden" style={{ backgroundColor: "rgb(10,8,5)" }}>
       <Image
         src="/section1.png"
         alt=""
@@ -90,7 +90,18 @@ export default function Feed({ jobs, statuses, sources }) {
         sizes="100vw"
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
+      {/* Continues the hero's own bottom-edge color (rgb(10,8,5)) so the
+          mountain photo dissolves into this section's sky rather than
+          cutting hard at the seam. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-1 h-40 sm:h-56"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(10,8,5,1) 0%, rgba(10,8,5,0.55) 45%, rgba(10,8,5,0) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-6 pb-16 pt-48 sm:pb-24 sm:pt-64">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--ink-soft)]">
