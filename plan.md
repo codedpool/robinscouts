@@ -162,6 +162,26 @@ specifically, not a requirement to unlock it.
     recording: genuinely edit this file's HTML (rename `.job-title`, nest a
     field deeper, etc.), push, then heal a collector pointed at it against
     the real change — not a prompt asking the AI to pretend something broke.
+  - **Wired into `src/lib/sources.js` as a real third source
+    (2026-08-22)**, specifically so the break/heal/recover cycle is
+    visible *in the live feed itself* — `SourceStatusBanner` showing
+    "unhealthy", the fixture's jobs disappearing/reappearing — not only
+    demonstrable in a terminal. Required first healing the collector's
+    output *schema* (it originally returned one row for the whole page
+    with a nested `open_positions` array; healed it to return one flat
+    row per job matching the shape `normalizeJobPosting` expects — a
+    genuine heal in its own right, not just a demo prop) and fixing the
+    fixture page itself (all 3 sample jobs shared one identical Apply URL,
+    which collided with `applicationUrl`'s uniqueness constraint — gave
+    each a distinct one).
+  - **Full break→heal→recover cycle re-verified end-to-end against
+    production on 2026-08-22**, after the Vercel `bdata`-invocation fix
+    above: genuinely restructured the mirror page, confirmed the collector
+    broke (`[]`), confirmed the live site's own `/api/refresh` marked it
+    unhealthy and showed the banner, healed it, confirmed recovery on the
+    live site, then reverted the page and healed the collector back to
+    baseline. Not scripted around — the actual deployed site, the actual
+    collector.
 - [x] Add a second **custom** Scraper Studio target (not just a pre-built
   library source) on a genuinely different ATS, to demonstrate Scraper
   Studio generalizing across structurally different pages — mirroring the
@@ -378,11 +398,45 @@ logged in) doesn't either.
   global install before) — needed for both the scheduled sync below and
   for the BYOK "add a company" flow to have any chance of working from a
   fresh Vercel serverless function, which won't have anyone's global npm
-  installs. **Not yet verified working on an actual Vercel deployment** —
-  confirmed locally that the CLI runs correctly via `-k` without relying
-  on a logged-in session, but whether Vercel's Node serverless runtime
-  can spawn `bdata` as a child process the same way has not been tested
-  end-to-end against the live site.
+  installs.
+- [x] **Now actually verified end-to-end against the live deployment
+  (2026-08-22)** — and it was broken. Two real, stacked production bugs,
+  found while rehearsing the self-heal demo against `robinscouts.vercel.app`
+  itself, not assumed fixed from local testing:
+  1. `execFile("bdata", ...)` depends on `node_modules/.bin/bdata` being
+     resolvable on PATH — true locally (npm scripts get `.bin` on PATH),
+     false in Vercel's function runtime (`bdata: command not found`).
+     **This meant the refresh button and BYOK "add a company" had never
+     actually worked on the deployed site at all** — every job a visitor
+     saw came from the separate GitHub Actions daily sync writing directly
+     to the shared Neon DB, never from anything clicked in the browser.
+     Fixed in `src/lib/scraper.js` by invoking
+     `node <resolved @brightdata/cli dist/index.js>` directly instead of
+     the bare command name — no PATH/shim dependency either way.
+  2. That alone wasn't enough: the CLI's entry point eagerly
+     `require()`s every subcommand module (including ones this app never
+     calls, which pull in `playwright-core` and other heavy deps), and
+     none of it is visible to Next.js's automatic Output File Tracing
+     since the script is referenced by path and handed to
+     `child_process`, never `require()`'d/`import()`'d directly — so it
+     was silently dropped from the deployed function bundle. Fixed with
+     an explicit `outputFileTracingIncludes` list in `next.config.mjs`
+     covering the full transitive dependency closure (walked from disk,
+     not guessed — ~45 packages, ~15MB).
+  - Also found and fixed along the way: `BRIGHTDATA_API_KEY` had been
+    added to the GitHub Actions secrets and local `.env`, but never to
+    Vercel's own project env vars — added via `vercel env add`, redeployed.
+  - **Real, non-trivial side effect worth a deliberate decision, not a
+    silent one:** fixing this means the "Check for new jobs" button now
+    genuinely re-runs the two built-in sources' collectors against the
+    *operator's* Bright Data key for any visitor who clicks it — exactly
+    the cost/exposure scenario the shared-snapshot decision two bullets up
+    was written to avoid. Before this fix it was a moot point (the button
+    silently failed for these two sources regardless); now it isn't. No
+    rate-limiting exists on `/api/refresh` today. Worth deciding
+    deliberately whether that's acceptable for the judging window's likely
+    traffic or whether the built-in sources should go back to
+    schedule-only by not falling back to the env var for them specifically.
 - [x] `scripts/refresh-static-sources.js` + `.github/workflows/refresh-static-sources.yml`:
   a daily-cron (plus manual `workflow_dispatch`) GitHub Action that
   re-syncs Onehouse and Sourcegraph against the shared Neon database,

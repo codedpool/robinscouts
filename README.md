@@ -26,10 +26,14 @@ progresses. This README covers what's built so far.
   feed shows a visible "source unhealthy" warning instead of silently going
   empty, and keeps showing the last known-good data.
 - A [self-controlled test fixture](docs/mirror/) hosted on GitHub Pages at
-  https://codedpool.github.io/robinscouts/mirror/, used to demonstrate a
-  genuine — not staged — self-heal: we can actually edit that page's HTML
-  structure and watch Scraper Studio heal against a real change, rather
-  than just telling the AI to pretend something broke.
+  https://codedpool.github.io/robinscouts/mirror/, wired into the live feed
+  as a real third source specifically to demonstrate a genuine — not
+  staged — self-heal: we can actually edit that page's HTML structure and
+  watch Scraper Studio heal against a real change, with the break and
+  recovery visible directly in the feed (source-unhealthy banner, jobs
+  disappearing/reappearing), rather than only in a terminal. The full
+  break→heal→recover cycle has been verified end-to-end against the live
+  deployed site, not just locally.
 - Deduplication across sources, full new/updated/possibly-closed change
   detection, and deterministic rule-based match scoring with a "Shown
   because" explanation — see below for how each works.
@@ -54,7 +58,7 @@ Not built yet: the on-camera self-heal recording — next.
 
 ## How the custom Scraper Studio scrapers are used
 
-Two collectors, same normalized schema, two different ATS structures:
+Three collectors, same normalized schema:
 
 - **Onehouse** (`c_msz1d5ly1aja1gxcbg`) — targets
   `https://jobs.lever.co/Onehouse`. Its parser reads every job card on the
@@ -66,6 +70,11 @@ Two collectors, same normalized schema, two different ATS structures:
   with a completely different DOM structure than Lever's. Its parser also
   filters out a generic "Join our Talent Community" CTA that Greenhouse
   mixes into listings — it looks like a job card in the DOM, but isn't one.
+- **RobinTest** (`c_mt18kiwd1rcsymt0tk`) — targets a page we fully control
+  ([`docs/mirror/index.html`](docs/mirror/index.html), served via GitHub
+  Pages), wired in as a real third source specifically so a genuine
+  structural break and Scraper Studio self-heal shows up directly in this
+  feed — not just in a terminal.
 
 The app calls each with:
 
@@ -75,8 +84,8 @@ bdata scraper run <collector_id> <url> --json
 
 via `src/lib/scraper.js` (`runCollector`), and normalizes each returned
 record into the shared job schema in `src/lib/normalize.js`
-(`normalizeJobPosting`) before saving it. Both sources are configured in
-`src/lib/sources.js`.
+(`normalizeJobPosting`) before saving it. All three sources are configured
+in `src/lib/sources.js`.
 
 When a source's target changes shape, we heal the collector in place —
 same Collector ID, updated parser — entirely from the CLI:
