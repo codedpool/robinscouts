@@ -81,15 +81,15 @@ export default function AddCompanyForm() {
   }
 
   return (
-    <div className="mt-6 border-b border-[var(--paper-line)] pb-5">
-      <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
+    <div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
         <input
           type="password"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="Your Bright Data API key"
           required
-          className="w-48 rounded-md border border-[var(--paper-line)] bg-[#fffdf7] px-2.5 py-1.5 text-xs text-[var(--foreground)] outline-none placeholder:text-[var(--ink-soft)] focus:border-[var(--ember)] focus:ring-1 focus:ring-[var(--ember)]/30"
+          className="w-full rounded-md border border-[var(--paper-line)] bg-[#fffdf7] px-3 py-2 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--ink-soft)] focus:border-[var(--ember)] focus:ring-1 focus:ring-[var(--ember)]/30"
         />
         <input
           type="url"
@@ -97,17 +97,17 @@ export default function AddCompanyForm() {
           onChange={(e) => setUrl(e.target.value)}
           placeholder="A company's careers page URL"
           required
-          className="w-64 flex-1 rounded-md border border-[var(--paper-line)] bg-[#fffdf7] px-2.5 py-1.5 text-xs text-[var(--foreground)] outline-none placeholder:text-[var(--ink-soft)] focus:border-[var(--ember)] focus:ring-1 focus:ring-[var(--ember)]/30"
+          className="w-full rounded-md border border-[var(--paper-line)] bg-[#fffdf7] px-3 py-2 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--ink-soft)] focus:border-[var(--ember)] focus:ring-1 focus:ring-[var(--ember)]/30"
         />
         <button
           type="submit"
           disabled={job?.status === "running"}
-          className="rounded-md bg-[var(--ember)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#ff6b3d] disabled:cursor-not-allowed disabled:opacity-60"
+          className="self-start rounded-md bg-[var(--ember)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#ff6b3d] disabled:cursor-not-allowed disabled:opacity-60"
         >
           Track this company
         </button>
       </form>
-      <p className="mt-1.5 text-[11px] text-[var(--ink-soft)]">
+      <p className="mt-2 text-[11px] text-[var(--ink-soft)]">
         Your key is used only to build and run this scraper — it's kept in
         this tab's session storage, never sent anywhere else, never saved on
         our server.

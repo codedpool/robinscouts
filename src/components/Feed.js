@@ -5,7 +5,7 @@ import Image from "next/image";
 import PreferencesForm from "@/components/PreferencesForm";
 import RefreshButton from "@/components/RefreshButton";
 import SourceStatusBanner from "@/components/SourceStatusBanner";
-import JobCard from "@/components/JobCard";
+import JobCarousel from "@/components/JobCarousel";
 import AddCompanyForm from "@/components/AddCompanyForm";
 import { EMPTY_PREFERENCES, hasAnyPreference, scoreJob } from "@/lib/matching";
 import { summarizeByCompany } from "@/lib/companySummary";
@@ -75,75 +75,91 @@ export default function Feed({ jobs, statuses, sources }) {
     jobs.filter((j) => !j.duplicateOfId).map((j) => j.company)
   ).size;
 
+  const cardClass =
+    "rounded-[28px] border shadow-[0_20px_50px_-20px_rgba(30,25,15,0.35)]";
+  const cardStyle = { borderColor: "var(--paper-line)", backgroundColor: "#fbf6ea" };
+
   return (
-    <>
-      <header className="border-b border-[var(--paper-line)] bg-[var(--background)]">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Image
-            src="/robinlogo.png"
-            alt="RobinScouts"
-            width={2048}
-            height={768}
-            className="h-11 w-auto sm:h-12"
-          />
+    <section className="relative overflow-hidden">
+      <Image
+        src="/section1.png"
+        alt=""
+        fill
+        aria-hidden="true"
+        className="object-cover"
+        sizes="100vw"
+      />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-24">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+              Scouting report
+            </p>
+            <h2 className="mt-2 max-w-lg font-display text-3xl font-medium leading-tight text-[var(--foreground)] sm:text-4xl">
+              What the robin found while you were gone
+            </h2>
+
+            <div className="mt-4 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-[var(--ink-soft)]">
+              <span>
+                <span className="font-semibold text-[var(--foreground)]">{activeCount}</span> open
+                roles across <span className="font-semibold text-[var(--foreground)]">{companyCount}</span>{" "}
+                {companyCount === 1 ? "company" : "companies"}
+              </span>
+              {companySummaries.map((entry) => (
+                <span key={entry.company}>
+                  <span className="mx-1.5 text-[var(--paper-line)]">·</span>
+                  {entry.company}{" "}
+                  <span className="font-medium text-[var(--foreground)]">+{entry.postedThisWeek}</span> this
+                  week
+                  {matching && entry.matchedThisWeek > 0 && (
+                    <>
+                      {" "}
+                      (<span className="font-medium text-[var(--ember)]">{entry.matchedThisWeek} match</span>)
+                    </>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <RefreshButton />
         </div>
-      </header>
 
-      <SourceStatusBanner statuses={statuses} />
-
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--ink-soft)]">
-          Field log
-        </p>
-        <h2 className="mt-2 font-display text-2xl font-medium text-[var(--foreground)] sm:text-3xl">
-          What&apos;s new since you last looked
-        </h2>
-
-        <div className="mt-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-[var(--ink-soft)]">
-          <span>
-            <span className="font-semibold text-[var(--foreground)]">{activeCount}</span> open
-            roles across <span className="font-semibold text-[var(--foreground)]">{companyCount}</span>{" "}
-            {companyCount === 1 ? "company" : "companies"}
-          </span>
-          {companySummaries.map((entry) => (
-            <span key={entry.company}>
-              <span className="mx-1.5 text-[var(--paper-line)]">·</span>
-              {entry.company}{" "}
-              <span className="font-medium text-[var(--foreground)]">+{entry.postedThisWeek}</span> this
-              week
-              {matching && entry.matchedThisWeek > 0 && (
-                <>
-                  {" "}
-                  (<span className="font-medium text-[var(--ember)]">{entry.matchedThisWeek} match</span>)
-                </>
-              )}
-            </span>
-          ))}
+        <div className="mt-8">
+          <SourceStatusBanner statuses={statuses} />
         </div>
 
-        <PreferencesForm preferences={preferences} onChange={updatePreferences} />
-        <AddCompanyForm />
+        <div className="mt-10 grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-stretch">
+          <JobCarousel items={visibleJobs} sources={sources} />
 
-        {visibleJobs.length === 0 ? (
-          <p className="mt-10 text-center text-sm text-[var(--ink-soft)]">
-            No jobs match right now — click &quot;Check for new jobs&quot; or
-            loosen your preferences.
-          </p>
-        ) : (
-          <ul
-            className="mt-6 divide-y divide-(--paper-line) overflow-hidden rounded-lg border shadow-[0_1px_2px_rgba(42,38,32,0.04)]"
-            style={{
-              borderColor: "var(--paper-line)",
-              backgroundColor: "#fbf6ea",
-            }}
-          >
-            {visibleJobs.map(({ job, score, reasons }) => (
-              <JobCard key={job.id} job={job} score={score} reasons={reasons} sources={sources} />
-            ))}
-          </ul>
-        )}
+          <div className={`flex flex-col gap-6 p-6 sm:p-8 ${cardClass}`} style={cardStyle}>
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-soft)]">
+                Brief the scout
+              </p>
+              <h3 className="mt-1 font-display text-xl font-medium text-[var(--foreground)]">
+                What should it look for?
+              </h3>
+              <div className="mt-4">
+                <PreferencesForm preferences={preferences} onChange={updatePreferences} />
+              </div>
+            </div>
+
+            <div className="border-t pt-6" style={{ borderColor: "var(--paper-line)" }}>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--ink-soft)]">
+                New territory
+              </p>
+              <h3 className="mt-1 font-display text-xl font-medium text-[var(--foreground)]">
+                Track another company
+              </h3>
+              <div className="mt-4">
+                <AddCompanyForm />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+    </section>
   );
 }
