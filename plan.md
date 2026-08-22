@@ -423,6 +423,30 @@ logged in) doesn't either.
   `gh run watch`, confirmed a clean pass end-to-end using only the GitHub
   secrets (no local machine involved at all).
 
+**Ideas raised but not acted on, worth remembering rather than losing —
+none of these are hackathon requirements, all are legitimate post-hackathon
+directions:**
+
+- Full user accounts (login, persisted profile) so preferences and BYOK
+  keys survive across devices/sessions — deliberately deferred, mainly
+  because persisting a *visitor's own* Bright Data key server-side is a
+  real security responsibility (encryption at rest, key management) that
+  deserves more care than a hackathon deadline allows, not because the
+  idea is bad.
+- A much lighter version of the same idea: a "save for later" list scoped
+  to the existing anonymous session (no login needed) — bookmark a job,
+  come back and apply later. Proposed, never built or even logged until
+  now.
+- Extending one collector to visit per-job detail pages for full
+  descriptions, so `skills`/`experience` aren't inferred from the title
+  alone (Phase 4's honest limitation).
+- Adding a source with genuine overlap with an existing one, so dedup
+  fires on real data instead of only synthetic test cases (Phase 2's
+  honest caveat).
+- A pre-built Bright Data library source alongside the two custom ones,
+  matching the two-data-layer design in this document's own Foundations
+  section, which the actual build ended up not doing.
+
 ---
 
 ## Phase 6 — Final: demo, README, submission
