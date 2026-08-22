@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBuild, updateBuild } from "@/lib/scraperJobs";
-import { checkScraperCreationProgress, redact } from "@/lib/scraper";
+import { checkScraperCreationProgress } from "@/lib/scraper";
 import { refreshOneSource } from "@/lib/refreshSource";
 import { prisma } from "@/lib/db";
 
@@ -82,7 +82,14 @@ export async function POST(request, { params }) {
     const updated = await updateBuild(build.id, { status: "done", jobCount: result.jobCount });
     return NextResponse.json(toClientShape(updated));
   } catch (err) {
-    const message = redact(String(err?.message || err), apiKey);
+    // Same lesson as /api/refresh's own catch-all: an unexpected failure
+    // here (a CLI timeout, a network error) carries raw internal detail in
+    // its message — a real example hit while verifying this fix on
+    // production included the full command line, collector ID, and a
+    // multi-line Bright Data batch-mode polling dump. Full detail goes to
+    // the server log only; the visitor gets a short, safe summary.
+    console.error(`[sources/status] build ${build.id} failed:`, err);
+    const message = "The scraper run failed unexpectedly — check server logs for details.";
     const updated = await updateBuild(build.id, { status: "error", error: message });
     return NextResponse.json(toClientShape(updated));
   }

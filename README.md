@@ -110,14 +110,32 @@ progress ("Reading the page…", "Writing the scraper…", "Testing it against
 the real page…") — then runs it immediately and folds the results into the
 same dedup/change-detection/matching pipeline as Onehouse and Sourcegraph.
 
-**How the key is handled:** it's used with `bdata`'s `-k` flag, which
-overrides authentication for that single CLI call only — verified
-empirically (a bogus key fails with a clean 401, it never silently falls
-back to this server's own logged-in session). The key is never written to
-our database or logs; the browser keeps it in `sessionStorage` only
-(cleared when the tab closes) and resends it on later requests for that
-visitor's own sources. Each visitor's added companies are scoped to an
-anonymous session cookie, so nobody sees anyone else's.
+**How it actually runs (revised 2026-08-22):** scraper creation is not one
+long-blocking call. It's Bright Data's own two-step protocol underneath —
+create a collector template, then trigger AI generation against it — both
+quick REST calls, made directly rather than through the `bdata` CLI. The
+actual multi-minute codegen happens entirely on Bright Data's servers
+afterward; the browser polls a status endpoint every 2 seconds, and each
+poll makes one quick REST call to check progress. A `ScraperBuild` table
+tracks state between polls. This replaced an earlier version that shelled
+out to `bdata scraper create` and left it running in an un-awaited
+background promise — which worked locally but, once actually deployed,
+never progressed at all: nothing about a serverless function's execution
+or an in-memory job map survives past the response being sent. Found by
+testing the deployed site directly, not assumed from local behavior.
+Running an *existing* collector (`runCollector`, used everywhere else)
+is a single bounded call and unaffected by any of this.
+
+**How the key is handled:** for the two-step creation calls above, it's
+sent directly as a Bearer token to Bright Data's API; for running an
+existing collector, it's used with `bdata`'s `-k` flag, which overrides
+authentication for that single CLI call only — verified empirically (a
+bogus key fails with a clean 401, it never silently falls back to this
+server's own logged-in session). The key is never written to our database
+or logs; the browser keeps it in `sessionStorage` only (cleared when the
+tab closes) and resends it on later requests — including each status
+poll — for that visitor's own sources. Each visitor's added companies are
+scoped to an anonymous session cookie, so nobody sees anyone else's.
 
 **Honest limitation:** AI-generated scraping for an arbitrary site is
 inherently less predictable than the two collectors above, which were
