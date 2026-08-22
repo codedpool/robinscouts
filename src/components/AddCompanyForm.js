@@ -81,7 +81,7 @@ export default function AddCompanyForm() {
   }
 
   return (
-    <div className="mt-4 border-b border-stone-200 pb-5">
+    <div className="mt-4 border-b border-white/8 pb-5">
       <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
         <input
           type="password"
@@ -89,7 +89,7 @@ export default function AddCompanyForm() {
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="Your Bright Data API key"
           required
-          className="w-48 rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-xs text-stone-700 outline-none placeholder:text-stone-400 focus:border-[#ee5a2c] focus:ring-1 focus:ring-[#ee5a2c]/30"
+          className="w-48 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-[#f5f1e8] outline-none placeholder:text-white/30 focus:border-[#ee5a2c] focus:ring-1 focus:ring-[#ee5a2c]/30"
         />
         <input
           type="url"
@@ -97,33 +97,33 @@ export default function AddCompanyForm() {
           onChange={(e) => setUrl(e.target.value)}
           placeholder="A company's careers page URL"
           required
-          className="w-64 flex-1 rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-xs text-stone-700 outline-none placeholder:text-stone-400 focus:border-[#ee5a2c] focus:ring-1 focus:ring-[#ee5a2c]/30"
+          className="w-64 flex-1 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-[#f5f1e8] outline-none placeholder:text-white/30 focus:border-[#ee5a2c] focus:ring-1 focus:ring-[#ee5a2c]/30"
         />
         <button
           type="submit"
           disabled={job?.status === "running"}
-          className="rounded-md bg-[#16233f] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#223257] disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-[#ee5a2c] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#ff6b3d] disabled:cursor-not-allowed disabled:opacity-60"
         >
           Track this company
         </button>
       </form>
-      <p className="mt-1.5 text-[11px] text-stone-400">
+      <p className="mt-1.5 text-[11px] text-white/35">
         Your key is used only to build and run this scraper — it's kept in
         this tab's session storage, never sent anywhere else, never saved on
         our server.
       </p>
 
-      {formError && <p className="mt-2 text-xs text-red-600">{formError}</p>}
+      {formError && <p className="mt-2 text-xs text-red-400">{formError}</p>}
 
       {job && job.status === "running" && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-stone-500">
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-[#8891a8]">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#ee5a2c]" />
           {stepLabel(job.step)}
         </p>
       )}
 
       {job && job.status === "done" && (
-        <p className="mt-2 text-xs text-emerald-700">
+        <p className="mt-2 text-xs text-emerald-400">
           {job.error
             ? job.error
             : `Scraper built — found ${job.jobCount} job${job.jobCount === 1 ? "" : "s"}.`}
@@ -131,7 +131,7 @@ export default function AddCompanyForm() {
       )}
 
       {job && job.status === "error" && (
-        <p className="mt-2 text-xs text-red-600">{job.error}</p>
+        <p className="mt-2 text-xs text-red-400">{job.error}</p>
       )}
     </div>
   );

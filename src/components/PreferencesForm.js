@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const fieldClass =
-  "rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-xs text-stone-700 outline-none placeholder:text-stone-400 focus:border-[#ee5a2c] focus:ring-1 focus:ring-[#ee5a2c]/30";
+  "rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-[#f5f1e8] outline-none placeholder:text-white/30 focus:border-[#ee5a2c] focus:ring-1 focus:ring-[#ee5a2c]/30";
 
 export default function PreferencesForm({ preferences, onChange }) {
   const [skillsText, setSkillsText] = useState(preferences.skills.join(", "));
@@ -13,7 +13,7 @@ export default function PreferencesForm({ preferences, onChange }) {
   }
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-stone-200 pb-5">
+    <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-white/8 pb-5">
       <input
         type="text"
         value={preferences.role}

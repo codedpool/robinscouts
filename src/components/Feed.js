@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import PreferencesForm from "@/components/PreferencesForm";
 import RefreshButton from "@/components/RefreshButton";
 import SourceStatusBanner from "@/components/SourceStatusBanner";
@@ -77,16 +76,12 @@ export default function Feed({ jobs, statuses, sources }) {
 
   return (
     <>
-      <header className="border-b border-[#ece4d6] bg-[#fdf8f0]">
+      <header className="border-b border-white/8 bg-[#0b0f1a]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Image
-            src="/robinscoutshorizontal.png"
-            alt="RobinScouts"
-            width={1774}
-            height={887}
-            priority
-            className="h-9 w-auto mix-blend-multiply sm:h-10"
-          />
+          <span className="text-lg font-semibold tracking-tight">
+            <span className="text-[#f5f1e8]">Robin</span>
+            <span className="text-[#ee5a2c]">Scouts</span>
+          </span>
           <RefreshButton />
         </div>
       </header>
@@ -94,17 +89,17 @@ export default function Feed({ jobs, statuses, sources }) {
       <SourceStatusBanner statuses={statuses} />
 
       <div className="mx-auto max-w-5xl px-6 py-8">
-        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-stone-500">
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-sm text-[#8891a8]">
           <span>
-            <span className="font-semibold text-[#16233f]">{activeCount}</span> open
-            roles across <span className="font-semibold text-[#16233f]">{companyCount}</span>{" "}
+            <span className="font-semibold text-[#f5f1e8]">{activeCount}</span> open
+            roles across <span className="font-semibold text-[#f5f1e8]">{companyCount}</span>{" "}
             {companyCount === 1 ? "company" : "companies"}
           </span>
           {companySummaries.map((entry) => (
             <span key={entry.company}>
-              <span className="mx-1.5 text-stone-300">·</span>
+              <span className="mx-1.5 text-white/20">·</span>
               {entry.company}{" "}
-              <span className="font-medium text-[#16233f]">+{entry.postedThisWeek}</span> this
+              <span className="font-medium text-[#f5f1e8]">+{entry.postedThisWeek}</span> this
               week
               {matching && entry.matchedThisWeek > 0 && (
                 <>
@@ -120,12 +115,12 @@ export default function Feed({ jobs, statuses, sources }) {
         <AddCompanyForm />
 
         {visibleJobs.length === 0 ? (
-          <p className="mt-10 text-center text-sm text-stone-400">
+          <p className="mt-10 text-center text-sm text-white/40">
             No jobs match right now — click &quot;Check for new jobs&quot; or
             loosen your preferences.
           </p>
         ) : (
-          <ul className="mt-5 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+          <ul className="mt-5 divide-y divide-white/6 overflow-hidden rounded-xl border border-white/10 bg-[#131a2b] shadow-lg">
             {visibleJobs.map(({ job, score, reasons }) => (
               <JobCard key={job.id} job={job} score={score} reasons={reasons} sources={sources} />
             ))}

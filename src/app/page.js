@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import Feed from "@/components/Feed";
+import Hero from "@/components/Hero";
 import { getSessionId } from "@/lib/session";
 import { getSourcesForSession } from "@/lib/sourcesServer";
 
@@ -19,8 +20,11 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="min-h-screen bg-[#fdf8f0]">
-      <Feed jobs={jobs} statuses={statuses} sources={sources} />
+    <div className="min-h-screen bg-[#0b0f1a]">
+      <Hero />
+      <div id="app">
+        <Feed jobs={jobs} statuses={statuses} sources={sources} />
+      </div>
     </div>
   );
 }
