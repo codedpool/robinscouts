@@ -21,10 +21,15 @@ export default function Hero() {
       />
 
       <div className="relative z-10 flex h-full flex-col px-6 py-8 sm:px-10 sm:py-10">
-        <span className="text-lg font-semibold tracking-tight">
-          <span className="text-[#f8f4e8]">Robin</span>
-          <span className="text-[#ff8552]">Scouts</span>
-        </span>
+        <div className="inline-flex w-fit rounded-lg bg-[#12100c]/55 px-3 py-1.5 backdrop-blur-sm">
+          <Image
+            src="/robinlogo.png"
+            alt="RobinScouts"
+            width={2048}
+            height={768}
+            className="h-12 w-auto sm:h-14"
+          />
+        </div>
 
         <div className="mt-10 max-w-xl">
           <h1 className="font-display text-4xl font-medium leading-[1.08] tracking-tight text-[#f8f4e8] sm:text-6xl">

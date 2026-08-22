@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import PreferencesForm from "@/components/PreferencesForm";
 import RefreshButton from "@/components/RefreshButton";
 import SourceStatusBanner from "@/components/SourceStatusBanner";
@@ -78,10 +79,13 @@ export default function Feed({ jobs, statuses, sources }) {
     <>
       <header className="border-b border-[var(--paper-line)] bg-[var(--background)]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="text-lg font-semibold tracking-tight">
-            <span className="text-[var(--foreground)]">Robin</span>
-            <span className="text-[var(--ember)]">Scouts</span>
-          </span>
+          <Image
+            src="/robinlogo.png"
+            alt="RobinScouts"
+            width={2048}
+            height={768}
+            className="h-11 w-auto sm:h-12"
+          />
           <RefreshButton />
         </div>
       </header>
