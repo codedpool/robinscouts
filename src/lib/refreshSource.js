@@ -23,7 +23,10 @@ export async function refreshOneSource(sourceKey, config, { sessionId, apiKey } 
     // Source unhealthy: this run returned 0 usable jobs. Leave existing
     // Job rows untouched so the feed doesn't go blank on a bad crawl, and
     // never advance possibly-closed detection off a failed run.
-    const lastError = errors[0]?.error || "0 valid jobs returned";
+    // null when there's no specific crawl error beyond "nothing came back"
+    // — the banner's own copy already says "0 valid jobs", so a fallback
+    // string here would just repeat that back redundantly.
+    const lastError = errors[0]?.error || null;
     await prisma.sourceStatus.upsert({
       where: { source: sourceKey },
       update: { status: "unhealthy", lastError },
@@ -35,7 +38,7 @@ export async function refreshOneSource(sourceKey, config, { sessionId, apiKey } 
         jobCount: 0,
       },
     });
-    return { ok: false, error: lastError };
+    return { ok: false, error: lastError || "0 valid jobs returned" };
   }
 
   const seenApplicationUrls = new Set();
