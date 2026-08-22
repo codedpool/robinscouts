@@ -1,4 +1,4 @@
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import path from "node:path";
 
@@ -25,7 +25,7 @@ const CLI_BIN = path.join(process.cwd(), "node_modules/@brightdata/cli/dist/inde
 // include a raw -k <apiKey> verbatim if left unredacted. Every error path
 // below routes through this before it can reach a thrown Error, an
 // in-memory job record, or SourceStatus.lastError in the database.
-function redact(message, apiKey) {
+export function redact(message, apiKey) {
   if (!apiKey) return message;
   return message.split(apiKey).join("[REDACTED]");
 }
@@ -55,68 +55,79 @@ export async function runCollector(collectorId, url, apiKey) {
   }
 }
 
-const STEP_LINE = /^Step: (\S+)/;
+const BRIGHTDATA_API_URL = "https://api.brightdata.com";
 
-// Builds a brand-new Scraper Studio collector from a natural-language prompt
-// against a live URL, using the caller's own Bright Data API key. Unlike
-// runCollector, this can take several minutes (AI codegen + preview), so it
-// uses spawn instead of execFile to stream stdout line-by-line and report
-// progress via onStep as named pipeline stages complete (e.g.
-// "code_generator", "preview_runner") rather than leaving the caller with a
-// blank wait.
-export function createCollector(url, prompt, { apiKey, name, onStep } = {}) {
-  return new Promise((resolve, reject) => {
-    const args = apiKey ? ["-k", apiKey] : [];
-    args.push("scraper", "create", url, prompt, "--json");
-    if (name) args.push("--name", name);
-
-    const child = spawn(process.execPath, [CLI_BIN, ...args]);
-
-    let stdout = "";
-    let stderrBuffer = "";
-    let lastStderrLine = "";
-
-    // The final --json envelope is the only thing bdata ever writes to
-    // stdout; all human-readable progress ("Step: code_generator — polling
-    // ...") goes to stderr instead, specifically so stdout stays pure JSON.
-    // Confirmed by reading @brightdata/cli's own source rather than
-    // assuming — it uses console.error for every "Step:" line and
-    // process.stdout.write only for the final print().
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk;
-    });
-
-    child.stderr.on("data", (chunk) => {
-      stderrBuffer += chunk;
-      const lines = stderrBuffer.split("\n");
-      stderrBuffer = lines.pop() ?? "";
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        lastStderrLine = trimmed;
-        const match = STEP_LINE.exec(trimmed);
-        if (match && onStep) onStep(match[1]);
-      }
-    });
-
-    child.on("error", (err) => reject(new Error(redact(String(err?.message || err), apiKey))));
-
-    child.on("close", (code) => {
-      if (code !== 0) {
-        // The final stderr line is the real failure summary (e.g. "Timeout
-        // after 600 seconds..." or "Failed to trigger scraper..."); the
-        // hundreds of "Step: X — polling" lines before it aren't useful in
-        // a UI error message.
-        const message = lastStderrLine || `bdata scraper create exited with code ${code}`;
-        reject(new Error(redact(message, apiKey)));
-        return;
-      }
-      try {
-        const lastLine = stdout.trim().split("\n").pop();
-        resolve(JSON.parse(lastLine));
-      } catch {
-        reject(new Error("Could not parse bdata scraper create output"));
-      }
-    });
+async function brightDataRequest(apiKey, method, endpoint, body) {
+  const res = await fetch(`${BRIGHTDATA_API_URL}${endpoint}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Bright Data API error (${res.status}): ${detail || res.statusText}`);
+  }
+  return res.json();
+}
+
+// Builds a brand-new Scraper Studio collector from a natural-language
+// prompt against a live URL, using the caller's own Bright Data API key.
+//
+// This used to shell out to `bdata scraper create`, which blocks
+// internally for up to 10 minutes polling Bright Data's own AI-generation
+// pipeline to finish — fine for a CLI, fatal for a single serverless
+// function invocation. Confirmed empirically: deployed as-was, the job
+// silently never progressed past "running" at all, for over 3 minutes,
+// with zero step updates (locally the first step appears within seconds).
+//
+// The fix is to decompose what the CLI does internally (read from its own
+// source, not guessed) into two pieces that fit serverless naturally:
+//   1. triggerScraperCreation — two quick REST calls (create a collector
+//      template, then trigger AI generation against it). Both return
+//      almost immediately; the actual multi-minute codegen happens
+//      entirely on Bright Data's side afterward.
+//   2. checkScraperCreationProgress — one quick REST call that checks
+//      how far that generation has gotten. The caller re-invokes this
+//      once per status poll instead of blocking in a loop, so progress
+//      persists on Bright Data's own servers rather than needing this
+//      process to stay alive between checks.
+export async function triggerScraperCreation(url, description, apiKey, name) {
+  const template = await brightDataRequest(apiKey, "POST", "/dca/collector", {
+    name,
+    deliver: {
+      type: "webhook",
+      endpoint: "https://example.com/webhook",
+      filename: { template: "data", extension: "json" },
+    },
+  });
+  if (!template.id) {
+    throw new Error("Bright Data did not return a collector id.");
+  }
+
+  await brightDataRequest(apiKey, "POST", `/dca/collectors/${template.id}/automate_template`, {
+    description,
+    urls: [url],
+  });
+
+  return { collectorId: template.id };
+}
+
+const TERMINAL_FAIL_STATUSES = ["failed", "error", "cancelled"];
+
+export async function checkScraperCreationProgress(collectorId, apiKey) {
+  const progress = await brightDataRequest(
+    apiKey,
+    "GET",
+    `/dca/collectors/${collectorId}/automate_template/progress`
+  );
+  if (progress.status === "done") {
+    return { done: true, step: progress.step || null };
+  }
+  if (TERMINAL_FAIL_STATUSES.includes(progress.status)) {
+    throw new Error(`AI generation finished with status "${progress.status}".`);
+  }
+  return { done: false, step: progress.step || null };
 }

@@ -66,7 +66,11 @@ export default function AddCompanyForm() {
     setJob({ status: "running", step: null, error: null, jobCount: null });
 
     pollRef.current = setInterval(async () => {
-      const statusRes = await fetch(`/api/sources/status/${data.jobId}`);
+      const statusRes = await fetch(`/api/sources/status/${data.jobId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      });
       const statusData = await statusRes.json();
       setJob(statusData);
 

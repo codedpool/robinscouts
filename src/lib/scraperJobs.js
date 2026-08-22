@@ -1,21 +1,20 @@
-// In-memory tracker for in-flight "add a company" scraper builds, keyed by
-// a locally-generated jobId. A single Map is fine here — this is a
-// single-process demo app, not a queue system — and it never stores the
-// visitor's API key, only status/progress.
-const jobs = new Map();
+import { prisma } from "./db.js";
 
-export function createJob() {
-  const id = crypto.randomUUID();
-  jobs.set(id, { status: "running", step: null, error: null, collectorId: null, jobCount: null });
-  return id;
+// Persists in-progress "add a company" scraper builds so status polls work
+// correctly across separate serverless invocations, which may not share
+// any process memory with each other or with the invocation that created
+// the build. Replaces an earlier in-memory Map that only ever worked on a
+// single persistent Node process.
+export async function createBuild({ sessionId, sourceKey, company, url, collectorId }) {
+  return prisma.scraperBuild.create({
+    data: { sessionId, sourceKey, company, url, collectorId, status: "running" },
+  });
 }
 
-export function updateJob(id, patch) {
-  const current = jobs.get(id);
-  if (!current) return;
-  jobs.set(id, { ...current, ...patch });
+export async function updateBuild(id, patch) {
+  return prisma.scraperBuild.update({ where: { id }, data: patch });
 }
 
-export function getJob(id) {
-  return jobs.get(id) || null;
+export async function getBuild(id) {
+  return prisma.scraperBuild.findUnique({ where: { id } });
 }

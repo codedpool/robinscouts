@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionId } from "@/lib/session";
-import { createCollector } from "@/lib/scraper";
-import { refreshOneSource } from "@/lib/refreshSource";
-import { createJob, updateJob } from "@/lib/scraperJobs";
+import { triggerScraperCreation, redact } from "@/lib/scraper";
+import { createBuild } from "@/lib/scraperJobs";
 import { prisma } from "@/lib/db";
 
 const MAX_SOURCES_PER_SESSION = 5;
@@ -67,69 +66,21 @@ export async function POST(request) {
 
   const company = companyNameFromUrl(url);
   const sourceKey = `user-${slugify(company)}-${Date.now()}`;
-  const jobId = createJob();
 
-  // Deliberately not awaited: building a scraper can take several minutes
-  // (AI codegen + preview), and the client polls
-  // GET /api/sources/status/[jobId] for live progress instead of holding
-  // one long HTTP request open. This runs on this process's own event
-  // loop, which is fine for this app's single persistent-Node deployment —
-  // a serverless host would need a real job queue behind this instead.
-  runInBackground(jobId, sessionId, sourceKey, company, url, apiKey);
-
-  return NextResponse.json({ jobId });
-}
-
-async function runInBackground(jobId, sessionId, sourceKey, company, url, apiKey) {
+  // Only the quick "kick off AI generation" step happens here — the actual
+  // multi-minute codegen runs on Bright Data's own servers and is checked
+  // separately by GET /api/sources/status/[jobId] on each poll. Trying to
+  // await the whole build in one request (as an earlier version did, via a
+  // CLI subprocess left running unawaited after the response) never
+  // actually worked once deployed: confirmed empirically that it silently
+  // stopped progressing at all in production, since a serverless function
+  // isn't guaranteed to keep running once its response has been sent.
   try {
-    const envelope = await createCollector(url, CREATE_PROMPT, {
-      apiKey,
-      name: sourceKey,
-      onStep: (step) => updateJob(jobId, { step }),
-    });
-
-    if (envelope.status !== "done" || !envelope.collector_id) {
-      updateJob(jobId, {
-        status: "error",
-        error: envelope.error || "Scraper build failed.",
-      });
-      return;
-    }
-
-    const collectorId = envelope.collector_id;
-    const label = `${company} (self-service)`;
-
-    await prisma.source.create({
-      data: { key: sourceKey, label, company, url, collectorId, sessionId },
-    });
-
-    updateJob(jobId, { step: "running_first_scrape" });
-    const result = await refreshOneSource(
-      sourceKey,
-      { label, company, url, collectorId },
-      { sessionId, apiKey }
-    );
-
-    if (!result.ok) {
-      // The collector itself built fine — just found nothing on this run.
-      // Keep the source around; it'll keep getting checked like any other.
-      updateJob(jobId, {
-        status: "done",
-        collectorId,
-        jobCount: 0,
-        sourceKey,
-        error: `Scraper built, but the first run found 0 listings (${result.error}). It'll keep checking on future refreshes.`,
-      });
-      return;
-    }
-
-    updateJob(jobId, {
-      status: "done",
-      collectorId,
-      jobCount: result.jobCount,
-      sourceKey,
-    });
+    const { collectorId } = await triggerScraperCreation(url, CREATE_PROMPT, apiKey, sourceKey);
+    const build = await createBuild({ sessionId, sourceKey, company, url, collectorId });
+    return NextResponse.json({ jobId: build.id });
   } catch (err) {
-    updateJob(jobId, { status: "error", error: String(err?.message || err) });
+    const message = redact(String(err?.message || err), apiKey);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }

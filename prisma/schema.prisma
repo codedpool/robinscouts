@@ -53,6 +53,30 @@ model SourceStatus {
   jobCount      Int       @default(0)
 }
 
+// Tracks an in-progress "add a company" scraper build across separate,
+// short-lived serverless invocations — replaces an earlier in-memory Map,
+// which only worked on a single persistent Node process and silently never
+// progressed at all once deployed to Vercel (confirmed: 3+ minutes with
+// zero step updates against production). The visitor's API key is
+// deliberately NOT a column here — it's resent by the browser on each
+// status poll instead, same as every other BYOK request in this app.
+model ScraperBuild {
+  id          String   @id @default(uuid())
+  sessionId   String
+  sourceKey   String
+  company     String
+  url         String
+  collectorId String?
+  status      String   @default("running") // running | done | error
+  step        String?
+  error       String?
+  jobCount    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sessionId])
+}
+
 // A visitor-added source, created live via their own Bright Data API key.
 // The two built-in sources (Onehouse, Sourcegraph) are NOT rows here — they
 // stay in src/lib/sources.js. Only self-service "add a company" sources
