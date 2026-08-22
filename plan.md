@@ -22,9 +22,10 @@ phase until the previous one is demo-able end to end.
 - [x] **Phase 5** — Stage 5: company hiring-activity summaries (optional, cut first) — done 2026-08-20
 - [x] **Phase 5.5** — UI redesign + self-service "add a company" (BYOK) — done 2026-08-20, not an original stage, see below
 - [x] **Phase 5.6** — Live deployment: Postgres/Neon migration + scheduled sync — done 2026-08-20, see below
+- [x] **Phase 5.7** — Cinematic hero + full atmospheric restyle — done 2026-08-22, see below
 - [ ] **Phase 6** — Final: demo video + full README + submission — not started
 
-Last updated: 2026-08-20 (Phases 2–4 completed earlier in the day; Phase 5.5 and 5.6 added that evening).
+Last updated: 2026-08-22 (Phase 5.7 added).
 
 ---
 
@@ -446,6 +447,50 @@ directions:**
 - A pre-built Bright Data library source alongside the two custom ones,
   matching the two-data-layer design in this document's own Foundations
   section, which the actual build ended up not doing.
+
+---
+
+## Phase 5.7 — Cinematic hero + full atmospheric restyle
+
+Not one of the original stages — the user was struck by micro1.ai's hero
+(painterly dusk landscape, birds crossing the frame, bold minimal
+headline) and wanted that aesthetic applied throughout, with the bird
+motif reworked as the brand's own robin delivering opportunities. Chose a
+full app restyle over a hero-only treatment; left the asset approach to
+my judgment.
+
+- [x] `src/components/Hero.js` — a full-bleed, code-drawn SVG landscape
+  (layered mountain silhouettes, dusk gradient sky, horizon glow) with
+  three birds drawn as simple stroked paths, animated via CSS keyframes
+  (fly in, arc across, fade out, staggered so they pass occasionally
+  rather than as a constant flock) — no external image or video asset,
+  by design (see rationale in the Phase 5.7 plan this was built from).
+  Sits above the existing feed on the same page, not a separate route —
+  a judge still reaches real data by scrolling, not an extra click.
+- [x] Every component (`Feed.js`, `JobCard.js`, `PreferencesForm.js`,
+  `AddCompanyForm.js`, `RefreshButton.js`, `SourceStatusBanner.js`)
+  recolored from the cream theme onto a dark atmospheric palette. No
+  logic changed anywhere — purely presentational, verified with a live
+  `/api/refresh` call afterward to confirm zero functional regression.
+- **Real bug caught and fixed during this pass:** the header originally
+  tried to reuse `public/robinscoutshorizontal.png` with a
+  `brightness-0 invert` filter to turn it white for the dark background —
+  this rendered as a solid white rectangle instead of the wordmark. Root
+  cause: that PNG has no alpha channel (confirmed earlier this project,
+  Phase 5.5's logo work), so `brightness-0` collapses the *entire* opaque
+  canvas — logo shape and background alike — to black before `invert`
+  flips it all to white; there's no transparency for the filter to
+  isolate. Fixed by dropping the raster logo from the header entirely and
+  using a plain two-tone text wordmark ("Robin" in off-white, "Scouts" in
+  the brand orange) instead — matches the actual logo's own coloring,
+  and is immune to this class of bug on any future background.
+- [x] Verified with real screenshots at each step (same Playwright
+  scratchpad setup used for every redesign this project) — confirmed the
+  bird animation genuinely animates (caught two birds mid-flight at
+  different positions across two screenshots taken 2.5s apart), and
+  checked a mobile viewport (390px) to confirm the hero's headline wraps
+  and the CTA stays usable — not previously checked for the light theme
+  either, worth having done now.
 
 ---
 
