@@ -491,6 +491,70 @@ my judgment.
   checked a mobile viewport (390px) to confirm the hero's headline wraps
   and the CTA stays usable — not previously checked for the light theme
   either, worth having done now.
+- **Rejected by the user — corrected in Phase 5.8 below.** Two specific
+  complaints: the hero should be the reference's actual layout (image
+  forms the whole hero, text overlaid directly on it), not a headline
+  block with a separate framed illustration underneath; and splitting the
+  page into a light hero + dark app body was wrong — one theme should run
+  the whole way down. Left as historical record of what didn't land and
+  why, not deleted, since the code-drawn-SVG-vs-real-illustration
+  reasoning in this section is still valid background for Phase 5.8.
+
+---
+
+## Phase 5.8 — Real illustrated hero, one theme end to end
+
+Corrects Phase 5.7 per direct user feedback. The user supplied two real
+painterly illustrations (`herorobin.png`, `herorobin2.png`) generated
+externally and a wide illustrated logo lockup (`robinlogo.png`), all in
+`public/`.
+
+- [x] Chose `herorobin2.png` over `herorobin.png`: it has an actual robin
+  (orange breast, unmistakably on-brand) perched close to the hiker with a
+  path visually connecting them — literally embodies "a robin brings the
+  opportunity." The other shows a distant hawk-like bird disconnected from
+  the scene — a nice image, but the wrong bird and the wrong story.
+- [x] `src/components/Hero.js` rebuilt as a true full-bleed hero:
+  `herorobin2.png` fills the entire viewport height via `next/image`
+  `fill` + `object-cover`, headline and CTA overlaid directly on top
+  (matching the actual reference layout this was modeled on), with a
+  radial gradient scrim anchored at the top-left corner — dark enough
+  there for white text contrast, fully transparent by the image's
+  lower-right — chosen specifically so neither the robin (lower-left) nor
+  the hiker (lower-right) is covered by the scrim or the text block.
+- [x] One field-journal design system now runs the entire page, not just
+  the hero: warm paper background (`#f6efe0`), ink text, Fraunces
+  (variable, soft axis) for display headings and job titles, Geist Mono
+  for logged/meta details (timestamps, source tags), the brand ember
+  orange as the one consistent accent. `Feed.js`, `JobCard.js`,
+  `PreferencesForm.js`, `AddCompanyForm.js`, `RefreshButton.js`,
+  `SourceStatusBanner.js` all recolored off the dark palette onto this —
+  no more theme split partway down the page.
+- [x] Job list redesigned, not just recolored: dropped the colored status
+  dot, gave each row a Fraunces-set title (job titles are short enough
+  that a serif stays scannable at list density), moved status labels and
+  meta info to small mono tags consistent with the "field log" framing
+  established in the hero and section heading ("Field log — What's new
+  since you last looked").
+- **Real bug caught and fixed during this pass:** removing the forced
+  dark background from `page.js`'s wrapper (needed for the one-theme
+  requirement) initially left the stats/filter strip transparent, which
+  inherited the new light page background while its text colors were
+  still tuned for the old dark section — nearly illegible. Caught via
+  screenshot, not assumed away; fixed by giving that strip no reliance on
+  inherited background at all now that the whole page shares one theme.
+  Separately, the job list's `divide-y` rows rendered with a default
+  near-black divider because a color was never explicitly set for it —
+  inline styles can't reach the child-combinator selector `divide-y`
+  relies on, so this needed an actual `divide-(--paper-line)` utility
+  class, not a style prop. Both caught by screenshot before being called
+  done, not left for the user to find.
+- [x] Verified: full rebuild, live `/api/refresh` regression check,
+  desktop and 390px mobile screenshots of the corrected hero.
+- **Not yet done:** `robinlogo.png` (the wide illustrated logo lockup) is
+  committed to the repo but not yet placed anywhere — a reasonable home
+  is a section further down the page rather than the compact nav header,
+  where its detail would be lost at that size.
 
 ---
 
