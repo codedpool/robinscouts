@@ -66,6 +66,19 @@ export default function Feed({ jobs, statuses, sources }) {
       .sort((a, b) => b.score - a.score);
   }, [jobs, preferences, matching, duplicateCounts]);
 
+  const emptyMessage = useMemo(() => {
+    if (visibleJobs.length > 0) return null;
+    if (preferences.employmentType !== "any") {
+      const hasAnyOfType = jobs.some(
+        (j) => !j.duplicateOfId && j.employmentType === preferences.employmentType
+      );
+      if (!hasAnyOfType) {
+        return `None of the current listings are tagged "${preferences.employmentType}" — try "Any type", or check for new jobs.`;
+      }
+    }
+    return "Check for new jobs, or loosen your preferences on the right.";
+  }, [visibleJobs, jobs, preferences.employmentType]);
+
   const companySummaries = useMemo(
     () => summarizeByCompany(jobs, preferences, matching),
     [jobs, preferences, matching]
@@ -155,7 +168,7 @@ export default function Feed({ jobs, statuses, sources }) {
         )}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-stretch">
-          <JobCarousel items={visibleJobs} sources={sources} />
+          <JobCarousel items={visibleJobs} sources={sources} emptyMessage={emptyMessage} />
 
           <div className={`flex flex-col gap-5 p-6 sm:p-7 ${cardClass}`} style={cardStyle}>
             <div>

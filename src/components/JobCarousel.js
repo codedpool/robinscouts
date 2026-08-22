@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import JobCard from "@/components/JobCard";
 
-export default function JobCarousel({ items, sources }) {
+export default function JobCarousel({ items, sources, emptyMessage }) {
   const [index, setIndex] = useState(0);
   const total = items.length;
 
@@ -35,7 +35,7 @@ export default function JobCarousel({ items, sources }) {
           No jobs match right now
         </p>
         <p className="mt-2 max-w-xs text-sm text-[var(--ink-soft)]">
-          Check for new jobs, or loosen your preferences on the right.
+          {emptyMessage || "Check for new jobs, or loosen your preferences on the right."}
         </p>
       </div>
     );
